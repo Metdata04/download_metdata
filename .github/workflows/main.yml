@@ -1,0 +1,35 @@
+name: Download PDF
+
+on:
+  schedule:
+    - cron: '00 09 * * *'  # 2:30 PM SLT
+
+  workflow_dispatch: 
+
+jobs:
+  download-pdf:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests beautifulsoup4
+
+    - name: Run script to download the PDF
+      run: |
+        python main.py  
+
+    - name: Upload PDF to artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: daily-climate-update
+        path: metdata/*.pdf  # Upload all PDF files in the metdata folder
