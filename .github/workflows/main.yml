@@ -24,12 +24,19 @@ jobs:
         python -m pip install --upgrade pip
         pip install requests beautifulsoup4
 
+    - name: Create metdata folder
+      run: mkdir -p metdata  # Ensure the folder is created before running the script
+
     - name: Run script to download the PDF
       run: |
-        python main.py  
+        python main.py
 
-    - name: Upload PDF to artifacts
+    - name: Get current date
+      id: date
+      run: echo "::set-output name=current_date::$(date +'%Y-%m-%d')"
+
+    - name: Upload PDF to artifacts with date
       uses: actions/upload-artifact@v3
       with:
-        name: daily-climate-update
+        name: daily-climate-update-${{ steps.date.outputs.current_date }}
         path: metdata/*.pdf  # Upload all PDF files in the metdata folder
