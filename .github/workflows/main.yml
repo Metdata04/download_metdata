@@ -1,4 +1,4 @@
-name: Download PDF and Upload to Repository Folder
+name: Download PDF and Upload to Metdata Folder
 
 on:
   schedule:
