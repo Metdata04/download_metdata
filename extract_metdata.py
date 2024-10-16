@@ -3,17 +3,17 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-def extract_data_from_pdf(pdf_path):
+def extract_data_from_pdf(pdf_path): 
     predefined_locations = [
-        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo",
-        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake",
-        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa",
-        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana",
+        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
+        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake", 
+        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa", 
+        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana", 
         "Ratnapura", "Trincomalee", "Vavuniya", "Mattla", "Mullaitivu"
     ]
 
     with pdfplumber.open(pdf_path) as pdf:
-        page = pdf.pages[0]
+        page = pdf.pages[0]  
         tables = page.extract_tables()
 
         if tables:
@@ -23,34 +23,34 @@ def extract_data_from_pdf(pdf_path):
             # Extract rows 4 to 28 (zero-indexed, hence 3:28)
             df_extracted = df.iloc[3:27]
 
-            # Prepare a list to hold results
-            results = []
+            # Prepare a DataFrame to hold results
+            results = {
+                'Date': datetime.now().strftime('%m/%d/%Y'),
+                'Tmax': [],
+                'Tmin': [],
+                'Rainfall': []
+            }
 
-            # Extract data for each predefined location
-            for index, location in enumerate(predefined_locations):
-                if index < len(df_extracted):
-                    max_temp = df_extracted.iloc[index, 1] if not pd.isna(df_extracted.iloc[index, 1]) else None
-                    min_temp = df_extracted.iloc[index, 2] if not pd.isna(df_extracted.iloc[index, 2]) else None
-                    rainfall = df_extracted.iloc[index, 3] if not pd.isna(df_extracted.iloc[index, 3]) else None
+            # Loop through each predefined location by index instead of checking names
+            for index in range(len(predefined_locations)):
+                # Use the row index directly to extract data
+                max_temp = df_extracted.iloc[index, 1] if not pd.isna(df_extracted.iloc[index, 1]) else None
+                min_temp = df_extracted.iloc[index, 2] if not pd.isna(df_extracted.iloc[index, 2]) else None
+                rainfall = df_extracted.iloc[index, 3] if not pd.isna(df_extracted.iloc[index, 3]) else None
 
-                    # Append data to results in long format
-                    results.append({'Date': datetime.now().strftime('%m/%d/%Y'), 'Location': location, 'Variable': 'Tmax', 'Value': max_temp})
-                    results.append({'Date': datetime.now().strftime('%m/%d/%Y'), 'Location': location, 'Variable': 'Tmin', 'Value': min_temp})
-                    results.append({'Date': datetime.now().strftime('%m/%d/%Y'), 'Location': location, 'Variable': 'Rainfall', 'Value': rainfall})
+                 # Collect the data for Tmax, Tmin, Rainfall
+                results['Tmax'].append(max_temp)
+                results['Tmin'].append(min_temp)
+                results['Rainfall'].append(rainfall)
 
-            # Create DataFrame from results
-            df_results = pd.DataFrame(results)
-
-            # Convert the 'Value' column to numeric, coerce errors to NaN
-            df_results['Value'] = pd.to_numeric(df_results['Value'], errors='coerce')
-
-            # Pivot the DataFrame to have dates and variables as rows, and locations as columns
-            pivot_df = df_results.pivot_table(index=['Date', 'Variable'], columns='Location', values='Value')
-
-            # Reset the index to flatten the DataFrame
-            pivot_df.reset_index(inplace=True)
-
-            return pivot_df
+            # Create DataFrame with three rows
+            final_df = pd.DataFrame({
+                'Date': [results['Date']] * 3,
+                'Variable': ['Tmax', 'Tmin', 'Rainfall'],
+                **{predefined_locations[i]: [results['Tmax'][i], results['Tmin'][i], results['Rainfall'][i]] for i in range(len(predefined_locations))}
+            })
+            
+            return final_df
     return None
 
 def main(pdf_path):
@@ -66,7 +66,7 @@ def main(pdf_path):
         if os.path.exists(csv_file_path):
             df_daily_weather.to_csv(csv_file_path, mode='a', header=False, index=False)
         else:
-            df_daily_weather.to_csv(csv_file_path, index=False)
+            df_daily_weather.to_csv(csv_file_path, mode='w', header=True, index=False)
 
         print(f"Data extracted and appended to '{csv_file_path}'.")
     else:
