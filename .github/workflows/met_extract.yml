@@ -1,0 +1,35 @@
+name: Extract Data from PDF
+
+on:
+  workflow_dispatch:  
+
+jobs:
+  extract-data:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python environment
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pdfplumber pandas
+
+    - name: Run extraction script
+      run: python extract_metdata.py
+
+    - name: Commit and Push changes
+      run: |
+        git config --global user.name "metdata04"
+        git config --global user.email "metdata04@gmail.com"
+        git add extracted_data/*
+        git commit -m "Extracted data from climate update PDF"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
