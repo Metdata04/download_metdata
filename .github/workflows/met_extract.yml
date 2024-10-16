@@ -1,6 +1,8 @@
 name: Extract Data from PDF
 
 on:
+  schedule:
+    - cron: '0 10 * * *'  # 3:30 PM SLT
   workflow_dispatch:  
 
 jobs:
