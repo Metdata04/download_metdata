@@ -3,17 +3,17 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-def extract_data_from_pdf(pdf_path): 
+def extract_data_from_pdf(pdf_path):
     predefined_locations = [
-        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
-        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake", 
-        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa", 
-        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana", 
+        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo",
+        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake",
+        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa",
+        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana",
         "Ratnapura", "Trincomalee", "Vavuniya", "Mattla", "Mullaitivu"
     ]
 
     with pdfplumber.open(pdf_path) as pdf:
-        page = pdf.pages[0]  
+        page = pdf.pages[0]
         tables = page.extract_tables()
 
         if tables:
@@ -31,20 +31,27 @@ def extract_data_from_pdf(pdf_path):
                 'Rainfall': []
             }
 
-            # Loop through each predefined location by index instead of checking names
+            # Loop through each predefined location by index
             for index in range(len(predefined_locations)):
-                max_temp = df_extracted.iloc[index, 1] if not pd.isna(df_extracted.iloc[index, 1]) else None
-                min_temp = df_extracted.iloc[index, 2] if not pd.isna(df_extracted.iloc[index, 2]) else None
-                rainfall = df_extracted.iloc[index, 3] if not pd.isna(df_extracted.iloc[index, 3]) else None
+                # Use the row index directly to extract data
+                if index < len(df_extracted):
+                    max_temp = df_extracted.iloc[index, 1] if not pd.isna(df_extracted.iloc[index, 1]) else None
+                    min_temp = df_extracted.iloc[index, 2] if not pd.isna(df_extracted.iloc[index, 2]) else None
+                    rainfall = df_extracted.iloc[index, 3] if not pd.isna(df_extracted.iloc[index, 3]) else None
+                else:
+                    max_temp = None
+                    min_temp = None
+                    rainfall = None
 
+                # Collect the data for Tmax, Tmin, Rainfall
                 results['Tmax'].append(max_temp)
                 results['Tmin'].append(min_temp)
                 results['Rainfall'].append(rainfall)
 
-            # Create DataFrame with three rows
+            # Create a DataFrame with three rows for each location
             final_df = pd.DataFrame({
                 'Date': [results['Date']] * len(predefined_locations),
-                'Variable': ['Tmax', 'Tmin', 'Rainfall'],
+                'Variable': ['Tmax', 'Tmin', 'Rainfall'] * len(predefined_locations),
                 **{predefined_locations[i]: [results['Tmax'][i], results['Tmin'][i], results['Rainfall'][i]] for i in range(len(predefined_locations))}
             })
 
@@ -73,5 +80,5 @@ def main(pdf_path):
 if __name__ == "__main__":
     # Get the current date in YYYY-MM-DD format for the filename
     date_string = datetime.now().strftime('%Y-%m-%d')
-    pdf_filename = f'metdata/daily_climate_update_{date_string}.pdf'  # Format the filename with the current date
+    pdf_filename = f'metdata/daily_climate_update_{date_string}.pdf'
     main(pdf_filename)
