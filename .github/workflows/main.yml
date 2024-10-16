@@ -31,8 +31,8 @@ jobs:
 
     - name: Commit and Push changes
       run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
+        git config --global user.name "Metdata04"
+        git config --global user.email "metdata04@gmail.com"
         git add metdata/*
         git commit -m "Add daily climate update PDF"
         git push
