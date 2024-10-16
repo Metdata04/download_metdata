@@ -1,10 +1,9 @@
-name: Download PDF
+name: Download PDF, Commit, and Upload to Artifacts
 
 on:
   schedule:
     - cron: '00 09 * * *'  # 2:30 PM SLT
-
-  workflow_dispatch: 
+  workflow_dispatch:
 
 jobs:
   download-pdf:
@@ -22,14 +21,23 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install requests beautifulsoup4
+        pip install google-auth google-auth-oauthlib google-auth-httplib2 google-api-python-client requests beautifulsoup4
 
     - name: Create metdata folder
       run: mkdir -p metdata  # Ensure the folder is created before running the script
 
-    - name: Run script to download the PDF
+    - name: Run the script to download PDF
+      run: python main.py
+
+    - name: Commit and Push changes
       run: |
-        python main.py
+        git config --global user.name "GitHub Actions"
+        git config --global user.email "actions@github.com"
+        git add metdata/*
+        git commit -m "Add daily climate update PDF"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Get current date
       id: date
