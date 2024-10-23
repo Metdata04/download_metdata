@@ -3,7 +3,7 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-def extract_data_from_pdf(pdf_path, unchanged=False): 
+def extract_data_from_pdf(pdf_path=None, pdf_missing=True): 
     predefined_locations = [
         "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
         "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake", 
@@ -12,14 +12,14 @@ def extract_data_from_pdf(pdf_path, unchanged=False):
         "Ratnapura", "Trincomalee", "Vavuniya", "Mattla", "Mullaitivu"
     ]
 
-    if unchanged:
-        # If the PDF is unchanged, create a DataFrame with 'NA' values for all locations
+    if pdf_missing:
+        # If the PDF is missing, create a DataFrame with 'NA' values for all locations
         data = {
             'Date': [datetime.now().strftime('%m/%d/%Y')] * 3,
             'Variable': ['Tmax', 'Tmin', 'Rainfall'],
         }
         for location in predefined_locations:
-            data[location] = ['NA', 'NA', 'NA']
+            data[location] = ['NA', 'NA', 'NA']  # Fill 'NA' for all columns
         return pd.DataFrame(data)
 
     with pdfplumber.open(pdf_path) as pdf:
