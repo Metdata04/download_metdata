@@ -3,7 +3,7 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-def extract_data_from_pdf(pdf_path=None, pdf_missing=True): 
+def extract_data_from_pdf(pdf_path=None, pdf_missing=False): 
     predefined_locations = [
         "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
         "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake", 
