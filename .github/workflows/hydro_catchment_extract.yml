@@ -2,7 +2,7 @@ name: Extract hydro catchment Data from PDF
 
 on:
   schedule:
-    - cron: '30 10 * * *'  # :00 PM SLT
+    - cron: '50 9 * * *'  # 3.50 PM SLT
   workflow_dispatch:  
 
 jobs:
