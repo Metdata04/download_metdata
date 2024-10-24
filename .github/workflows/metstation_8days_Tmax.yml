@@ -2,7 +2,7 @@ name: Extract metstation avg Tmax Data from PDF
 
 on:
   schedule:
-    - cron: '10 10 * * *'  # 4.10 PM SLT
+    - cron: '10 10 * * *'  # 3.40 PM SLT
   workflow_dispatch:  
 
 jobs:

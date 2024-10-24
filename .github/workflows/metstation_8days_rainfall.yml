@@ -2,7 +2,7 @@ name: Extract metstation avg rainfall Data from PDF
 
 on:
   schedule:
-    - cron: '00 10 * * *'  # 4.00 PM SLT
+    - cron: '00 10 * * *'  # 3.30 PM SLT
   workflow_dispatch:  
 
 jobs:
