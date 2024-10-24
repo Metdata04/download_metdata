@@ -1,7 +1,7 @@
 import os
 import pdfplumber
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Predefined locations for Tmin data extraction
 predefined_locations = [
@@ -23,7 +23,7 @@ zones = {
     "Southern Plains": ["Hambantota", "Mattala"]
 }
 
-def extract_tmin_data_from_pdf(pdf_path=None, pdf_missing=False):
+def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
@@ -66,10 +66,10 @@ def extract_tmin_data_from_pdf(pdf_path=None, pdf_missing=False):
             max_tmin = tmin_values.max()  
             min_tmin = tmin_values.min()  
 
-            # Calculate zone-wise averages
+            # Calculate zone-wise averages for the current day
             zone_averages = {zone: tmin_values[[predefined_locations.index(station) for station in stations]].mean() for zone, stations in zones.items()}
 
-            # Create a DataFrame for results
+            # Create a DataFrame for daily results
             final_df = pd.DataFrame({
                 'Date': [results['Date']],
                 'Variable': ['Tmin'],
@@ -85,22 +85,50 @@ def extract_tmin_data_from_pdf(pdf_path=None, pdf_missing=False):
 
     return None
 
+def calculate_8_day_average(df):
+    # Check if there are enough records for 8-day average calculation
+    if len(df) >= 8:
+        # Calculate 8-day averages for each zone
+        zone_averages_8_days = {}
+        for zone, stations in zones.items():
+            station_columns = [station for station in stations if station in df.columns]
+            zone_averages_8_days[f'8-Day Average {zone}'] = df[station_columns].tail(8).mean().mean()
+
+        # Append the 8-day averages row to the DataFrame
+        zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])
+        zone_averages_row['Date'] = df['Date'].max()  # Use the last date for the 8-day average
+        zone_averages_row['Variable'] = '8-Day Average Tmin'
+
+        # Append the zone averages to the existing dataframe
+        df = pd.concat([df, zone_averages_row], ignore_index=True)
+
+    return df
+
 def main(pdf_path):
-    # Extract the data from the downloaded PDF
-    df_daily_tmin = extract_tmin_data_from_pdf(pdf_path)
+    # Extract Tmin data from the PDF
+    df_daily_tmin = extract_tmin_from_pdf(pdf_path)
 
     if df_daily_tmin is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'metstation_8days_tmin.csv')
+        csv_file_path = os.path.join('extracted_data', 'metstation_tmin_data.csv')
 
         # Append to CSV if it already exists, otherwise create a new one
         if os.path.exists(csv_file_path):
-            df_daily_tmin.to_csv(csv_file_path, mode='a', header=False, index=False)
+            # Load the existing data
+            df_existing = pd.read_csv(csv_file_path)
+            # Append the new daily data
+            df_combined = pd.concat([df_existing, df_daily_tmin], ignore_index=True)
         else:
-            df_daily_tmin.to_csv(csv_file_path, mode='w', header=True, index=False)
+            df_combined = df_daily_tmin
 
-        print(f"Data extracted and saved to '{csv_file_path}'.")
+        # Calculate 8-day average if enough data exists
+        df_combined = calculate_8_day_average(df_combined)
+
+        # Save the updated data back to the same CSV
+        df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
+
+        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
