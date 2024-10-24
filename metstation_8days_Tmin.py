@@ -3,7 +3,7 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-# Predefined locations for Rainfall data extraction
+# Predefined locations for Tmin data extraction
 predefined_locations = [
     "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
     "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", 
@@ -23,15 +23,15 @@ zones = {
     "Southern Plains": ["Hambantota", "Mattala"]
 }
 
-def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
+def extract_tmin_data_from_pdf(pdf_path=None, pdf_missing=False):
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
             'Date': [datetime.now().strftime('%m/%d/%Y')],
-            'Variable': ['Rainfall'],
+            'Variable': ['Tmin'],
         }
         for location in predefined_locations:
-            data[location] = [0.0]  # Set '0.0' for Rainfall data
+            data[location] = [0.0]  # Set '0.0' for Tmin data
         return pd.DataFrame(data)
 
     # Open the PDF and extract tables
@@ -49,35 +49,35 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
             # Prepare a DataFrame to hold results
             results = {
                 'Date': datetime.now().strftime('%m/%d/%Y'),
-                'Rainfall': []
+                'Tmin': []
             }
 
-            # Loop through each predefined location and extract Rainfall data
+            # Loop through each predefined location and extract Tmin data
             for index in range(len(predefined_locations)):
-                rainfall = df_extracted.iloc[index, 3] if index < len(df_extracted) else 0.0
-                results['Rainfall'].append(float(rainfall) if pd.notna(rainfall) and rainfall not in ['NA', 'tr', 'TR'] else 0.0)
+                tmin = df_extracted.iloc[index, 2] if index < len(df_extracted) else 0.0
+                results['Tmin'].append(float(tmin) if pd.notna(tmin) and tmin not in ['NA', 'tr', 'TR'] else 0.0)
 
-            # Convert Rainfall data to numeric, errors='coerce' will replace non-convertible values with NaN
-            rainfall_values = pd.to_numeric(results['Rainfall'], errors='coerce')
+            # Convert Tmin data to numeric, errors='coerce' will replace non-convertible values with NaN
+            tmin_values = pd.to_numeric(results['Tmin'], errors='coerce')
 
-            # Calculate total, average, max, and min Rainfall
-            total_rainfall = rainfall_values.sum()  
-            average_rainfall = rainfall_values.mean()  
-            max_rainfall = rainfall_values.max()  
-            min_rainfall = rainfall_values.min()  
+            # Calculate total, average, max, and min Tmin
+            total_tmin = tmin_values.sum()  
+            average_tmin = tmin_values.mean()  
+            max_tmin = tmin_values.max()  
+            min_tmin = tmin_values.min()  
 
             # Calculate zone-wise averages
-            zone_averages = {zone: rainfall_values[[predefined_locations.index(station) for station in stations]].mean() for zone, stations in zones.items()}
+            zone_averages = {zone: tmin_values[[predefined_locations.index(station) for station in stations]].mean() for zone, stations in zones.items()}
 
             # Create a DataFrame for results
             final_df = pd.DataFrame({
                 'Date': [results['Date']],
-                'Variable': ['Rainfall'],
-                **{predefined_locations[i]: [results['Rainfall'][i]] for i in range(len(predefined_locations))},
-                'Total Rainfall': [total_rainfall],
-                'Average Rainfall': [average_rainfall],
-                'Max Rainfall': [max_rainfall],
-                'Min Rainfall': [min_rainfall],
+                'Variable': ['Tmin'],
+                **{predefined_locations[i]: [results['Tmin'][i]] for i in range(len(predefined_locations))},
+                'Total Tmin': [total_tmin],
+                'Average Tmin': [average_tmin],
+                'Max Tmin': [max_tmin],
+                'Min Tmin': [min_tmin],
                 **{f'Average {zone}': [zone_averages[zone]] for zone in zones}
             })
 
@@ -87,18 +87,18 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
 
 def main(pdf_path):
     # Extract the data from the downloaded PDF
-    df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_path)
+    df_daily_tmin = extract_tmin_data_from_pdf(pdf_path)
 
-    if df_daily_rainfall is not None:
+    if df_daily_tmin is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'metstation_8days_rainfall.csv')
+        csv_file_path = os.path.join('extracted_data', 'metstation_8days_tmin.csv')
 
         # Append to CSV if it already exists, otherwise create a new one
         if os.path.exists(csv_file_path):
-            df_daily_rainfall.to_csv(csv_file_path, mode='a', header=False, index=False)
+            df_daily_tmin.to_csv(csv_file_path, mode='a', header=False, index=False)
         else:
-            df_daily_rainfall.to_csv(csv_file_path, mode='w', header=True, index=False)
+            df_daily_tmin.to_csv(csv_file_path, mode='w', header=True, index=False)
 
         print(f"Data extracted and saved to '{csv_file_path}'.")
     else:
