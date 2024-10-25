@@ -1,0 +1,32 @@
+name: Generate Rainfall Graph
+
+on:
+  schedule:
+    # This runs the job every Thursday at 11:30 AM UTC (which is 5 PM SLT)
+    - cron: '30 11 * * 4'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Checkout the repository code
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Set up Python
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x' 
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pandas matplotlib
+
+    # Run the script to generate the rainfall graph
+    - name: Run rainfall graph script
+      run: |
+          daily_rainfall_avg_graph.py
