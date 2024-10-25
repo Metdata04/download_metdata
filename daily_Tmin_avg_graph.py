@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
+import os  # Import os module to manage directories
 
 # Load the Tmin data from the CSV file
 csv_file_path = 'extracted_data/metstation_tmin_data.csv'  
@@ -33,7 +34,12 @@ plt.xticks(df_last_30_days['Date'], df_last_30_days['Date'].dt.strftime('%m/%d/%
 
 # Generate a unique filename based on the current date and time
 current_time = datetime.now().strftime('%Y%m%d_%H%M%S')
-filename = f'Graphs/Avg_Tmin/daily_tmin_average_past_30_days_{current_time}.png'
+directory = 'Graphs/Avg_Tmin'  # Directory to store the graphs
+filename = f'{directory}/daily_tmin_average_past_30_days_{current_time}.png'
+
+# Create the directory if it doesn't exist
+if not os.path.exists(directory):
+    os.makedirs(directory)
 
 # Save the plot with the unique filename
 plt.tight_layout()
