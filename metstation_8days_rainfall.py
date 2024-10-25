@@ -62,12 +62,12 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Calculate total, average, max, and min Rainfall
             total_rainfall = rainfall_values.sum()  
-            average_rainfall = rainfall_values.mean()  
+            average_rainfall =round(rainfall_values.mean(),2)  
             max_rainfall = rainfall_values.max()  
             min_rainfall = rainfall_values.min()  
 
             # Calculate zone-wise averages for the current day (we will later calculate for 8 days)
-            zone_averages = {zone: rainfall_values[[predefined_locations.index(station) for station in stations]].mean() for zone, stations in zones.items()}
+            zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
@@ -92,7 +92,7 @@ def calculate_8_day_average(df):
         zone_averages_8_days = {}
         for zone, stations in zones.items():
             station_columns = [station for station in stations if station in df.columns]
-            zone_averages_8_days[f'8-Day Average {zone}'] = df[station_columns].tail(8).mean().mean()
+            zone_averages_8_days[f'8-Day Average {zone}'] = round(df[station_columns].tail(8).mean().mean(),2)
 
         # Append the 8-day averages row to the DataFrame
         zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])

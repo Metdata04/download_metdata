@@ -61,13 +61,13 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
             tmin_values = pd.to_numeric(results['Tmin'], errors='coerce')
 
             # Calculate total, average, max, and min Tmin
-            total_tmin = tmin_values.sum()  
+            total_tmin = round(tmin_values.sum(),2) 
             average_tmin = tmin_values.mean()  
             max_tmin = tmin_values.max()  
             min_tmin = tmin_values.min()  
 
             # Calculate zone-wise averages for the current day
-            zone_averages = {zone: tmin_values[[predefined_locations.index(station) for station in stations]].mean() for zone, stations in zones.items()}
+            zone_averages = {zone: round(tmin_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
@@ -92,7 +92,7 @@ def calculate_8_day_average(df):
         zone_averages_8_days = {}
         for zone, stations in zones.items():
             station_columns = [station for station in stations if station in df.columns]
-            zone_averages_8_days[f'8-Day Average {zone}'] = df[station_columns].tail(8).mean().mean()
+            zone_averages_8_days[f'8-Day Average {zone}'] = round(df[station_columns].tail(8).mean().mean(),2)
 
         # Append the 8-day averages row to the DataFrame
         zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])
