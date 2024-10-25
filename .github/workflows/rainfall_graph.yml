@@ -4,6 +4,7 @@ on:
   schedule:
     # This runs the job every Thursday at 11:30 AM UTC (which is 5 PM SLT)
     - cron: '30 11 * * 4'
+  workflow_dispatch:
 
 jobs:
   build:
