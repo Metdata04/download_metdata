@@ -30,7 +30,7 @@ def get_daily_pdf_link(webpage_url):
         return None
 
 def hash_file(filepath):
-    """Generate SHA256 hash of a file"""
+#Generate SHA256 hash of a file
     sha256_hash = hashlib.sha256()
     with open(filepath, "rb") as f:
         for byte_block in iter(lambda: f.read(4096), b""):
@@ -103,8 +103,6 @@ if __name__ == "__main__":
         pdf_path = check_if_pdf_is_new(pdf_url)
         if pdf_path:
             print(f"PDF for today is available at {pdf_path}")
-            # You can now proceed with your extraction logic
-            # extract_data(pdf_path)  # For your extraction function, handle adding the current date and 'NA'
         else:
             print("Failed to get PDF or PDF is unchanged.")
     else:

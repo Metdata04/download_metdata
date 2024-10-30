@@ -19,9 +19,12 @@ thirty_days_ago = current_date - timedelta(days=30)
 # Filter data for the past 30 days
 df_last_30_days = df[(df['Date'] >= thirty_days_ago) & (df['Date'] <= current_date)]
 
-# Plot daily average Tmin as a bar chart
+# Plot daily average Tmin as a line graph
 plt.figure(figsize=(12, 6))
-plt.bar(df_last_30_days['Date'], df_last_30_days['Average Tmin'], color='purple', width=0.8, label='Average Tmin')
+plt.plot(df_last_30_days['Date'], df_last_30_days['Average Tmin'], color='purple', marker='o', label='Average Tmin')
+
+# Set y-axis range
+plt.ylim(10, 40)
 
 # Customize the plot
 plt.title('Daily Average Tmin Over the Past 30 Days', fontsize=14, weight='bold')

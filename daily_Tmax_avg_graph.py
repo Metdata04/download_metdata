@@ -19,9 +19,12 @@ thirty_days_ago = current_date - timedelta(days=30)
 # Filter data for the past 30 days
 df_last_30_days = df[(df['Date'] >= thirty_days_ago) & (df['Date'] <= current_date)]
 
-# Plot daily Tmax average as a bar chart
+# Plot daily Tmax average as a line graph
 plt.figure(figsize=(12, 6))
-plt.bar(df_last_30_days['Date'], df_last_30_days['Average Tmax'], color='green', width=0.8, label='Average Tmax')
+plt.plot(df_last_30_days['Date'], df_last_30_days['Average Tmax'], color='blue', marker='o', label='Average Tmax')
+
+# Set y-axis range for Tmax
+plt.ylim(15, 50)
 
 # Customize the plot
 plt.title('Daily Average Tmax Over the Past 30 Days', fontsize=14, weight='bold')
