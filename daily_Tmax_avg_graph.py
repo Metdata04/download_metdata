@@ -24,7 +24,7 @@ plt.figure(figsize=(12, 6))
 plt.plot(df_last_30_days['Date'], df_last_30_days['Average Tmax'], color='blue', marker='o', label='Average Tmax')
 
 # Set y-axis range for Tmax
-plt.ylim(15, 50)
+plt.ylim(20, 40)
 
 # Customize the plot
 plt.title('Daily Average Tmax Over the Past 30 Days', fontsize=14, weight='bold')

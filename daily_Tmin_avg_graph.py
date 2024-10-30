@@ -24,7 +24,7 @@ plt.figure(figsize=(12, 6))
 plt.plot(df_last_30_days['Date'], df_last_30_days['Average Tmin'], color='purple', marker='o', label='Average Tmin')
 
 # Set y-axis range
-plt.ylim(10, 40)
+plt.ylim(15, 35)
 
 # Customize the plot
 plt.title('Daily Average Tmin Over the Past 30 Days', fontsize=14, weight='bold')
