@@ -42,11 +42,8 @@ def extract_hydro_catchment_data(pdf_path, pdf_missing=False):
                                     rainfall_data[station] = float(value)
                                 except ValueError:
                                     rainfall_data[station] = value  # Keep it as a string if not convertible
-
-                            # Debugging print to confirm extraction for Castlereigh
-                            if station == "Castlereigh":
-                                print(f"Extracted for Castlereigh: {rainfall_data[station]}")
-
+ 
+                                
         except Exception as e:
             print(f"Error reading PDF: {e}")
             rainfall_data = {station: 'NA' for station in stations}  # If PDF error, use 'NA'
@@ -70,7 +67,7 @@ if __name__ == "__main__":
     hydro_data_df = extract_hydro_catchment_data(pdf_path, pdf_missing)
 
     # Print the DataFrame for debugging
-    print(hydro_data_df)
+    #print(hydro_data_df)
 
     # Save the extracted data to a CSV file
     os.makedirs('extracted_data', exist_ok=True)
