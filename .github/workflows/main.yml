@@ -40,8 +40,11 @@ jobs:
         git config --global user.email "metdata04@gmail.com"
 
     - name: Pull Latest Changes
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        git pull origin master
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git pull origin master
 
     - name: Add Metdata Files
       run: |
@@ -52,4 +55,5 @@ jobs:
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-       git push origin master
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git push origin master
