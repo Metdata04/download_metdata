@@ -12,9 +12,7 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-      with:
-          persist-credentials: false  # Disable automatic token setup
-          fetch-depth: 0  # Fetch all history for all branches and tags
+  
 
     - name: Set up Python environment
       uses: actions/setup-python@v4
