@@ -2,7 +2,7 @@ name: Download PDF and Upload to Metdata Folder
 
 on:
   schedule:
-    - cron: '50 15 * * *'  # 2:30 PM SLT
+    - cron: '00 09 * * *'  # 2:30 PM SLT
   workflow_dispatch:
 
 jobs:
