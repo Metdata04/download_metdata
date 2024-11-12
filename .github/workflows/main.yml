@@ -2,17 +2,18 @@ name: Download PDF and Upload to Metdata Folder
 
 on:
   schedule:
-    - cron: '00 09 * * *'  # 2:30 PM SLT
+    - cron: '50 15 * * *'  # 2:30 PM SLT
   workflow_dispatch:
 
 jobs:
   download-pdf:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
     - name: Checkout repository
       uses: actions/checkout@v3
-  
 
     - name: Set up Python environment
       uses: actions/setup-python@v4
@@ -32,7 +33,7 @@ jobs:
 
     - name: Get current date
       id: date
-      run: echo "::set-output name=current_date::$(date +'%Y-%m-%d')"
+      run: echo "current_date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
     - name: Set Up Git
       run: |
@@ -41,19 +42,19 @@ jobs:
 
     - name: Pull Latest Changes
       env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git pull origin master
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+        git pull origin master
 
     - name: Add Metdata Files
       run: |
         git add metdata/*  # Add all files in the metdata folder
-        git commit -m "Add daily climate update PDF - ${{ steps.date.outputs.current_date }}"
+        git commit -m "Add daily climate update PDF - ${{ env.current_date }}" || echo "No changes to commit"
 
     - name: Push Changes
       env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git push origin master
+        git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+        git push origin master
