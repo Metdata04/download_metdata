@@ -106,7 +106,7 @@ def calculate_8_day_average(df):
 
 def main(pdf_path):
     # Extract Tmin data from the PDF
-    df_daily_tmin = extract_tmin_from_pdf(pdf_path)
+    df_daily_tmin = extract_tmin_from_pdf(pdf_path, pdf_missing=False)  # Adjust pdf_missing as needed
 
     if df_daily_tmin is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
