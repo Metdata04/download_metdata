@@ -62,12 +62,12 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Calculate total, average, max, and min Rainfall
             total_rainfall = rainfall_values.sum()  
-            average_rainfall =round(rainfall_values.mean(),2)  
+            average_rainfall = round(rainfall_values.mean(), 2)  
             max_rainfall = rainfall_values.max()  
             min_rainfall = rainfall_values.min()  
 
             # Calculate zone-wise averages for the current day (we will later calculate for 8 days)
-            zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
+            zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
@@ -106,8 +106,13 @@ def calculate_8_day_average(df):
 
 
 def main(pdf_path):
-    # Extract the data from the downloaded PDF
-    df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_path)
+    # Check if the PDF file exists
+    if not os.path.exists(pdf_path):
+        print(f"PDF file not found: {pdf_path}. Filling with '0.0' values.")
+        df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_missing=True)
+    else:
+        # Extract the data from the downloaded PDF
+        df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_path)
 
     if df_daily_rainfall is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder

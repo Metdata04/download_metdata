@@ -104,7 +104,7 @@ def calculate_8_day_average(df):
 
     return df
 
-    return df
+    
 
 def main(pdf_path):
     # Extract Tmax data from the PDF
