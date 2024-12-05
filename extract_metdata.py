@@ -3,12 +3,12 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-def extract_data_from_pdf(pdf_path=None, pdf_missing=False): 
+def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
     predefined_locations = [
-        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
-        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake", 
-        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa", 
-        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana", 
+        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo",
+        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake",
+        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa",
+        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana",
         "Ratnapura", "Trincomalee", "Vavuniya", "Mattla", "Mullaitivu"
     ]
 
@@ -23,7 +23,7 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
         return pd.DataFrame(data)
 
     with pdfplumber.open(pdf_path) as pdf:
-        page = pdf.pages[0]  
+        page = pdf.pages[0]
         tables = page.extract_tables()
 
         if tables:
@@ -65,8 +65,13 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
 
 
 def main(pdf_path):
-    # Extract the data from the downloaded PDF
-    df_daily_weather = extract_data_from_pdf(pdf_path)
+    # Check if the PDF file exists
+    if not os.path.exists(pdf_path):
+        print(f"PDF file not found: {pdf_path}. Filling with 'NA' values.")
+        df_daily_weather = extract_data_from_pdf(pdf_missing=True)
+    else:
+        # Extract the data from the downloaded PDF
+        df_daily_weather = extract_data_from_pdf(pdf_path)
 
     if df_daily_weather is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
