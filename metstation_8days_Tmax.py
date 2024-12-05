@@ -3,7 +3,7 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime, timedelta
 
-# Predefined locations for rainfall data extraction
+# Predefined locations for Tmax data extraction
 predefined_locations = [
     "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
     "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", 
@@ -23,20 +23,20 @@ zones = {
     "Southern Plains": ["Hambantota", "Mattala"]
 }
 
-def extract_rainfall_from_pdf(pdf_path=None, pdf_missing=False):
+def extract_tmax_from_pdf(pdf_path=None, pdf_missing=False):
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
             'Date': [datetime.now().strftime('%m/%d/%Y')],
-            'Variable': ['Rainfall'],
+            'Variable': ['Tmax'],
         }
         for location in predefined_locations:
-            data[location] = [0.0]  # Set '0.0' for Rainfall data
+            data[location] = [0.0]  # Set '0.0' for Tmax data
         return pd.DataFrame(data)
 
     # Open the PDF and extract tables
     with pdfplumber.open(pdf_path) as pdf:
-        page = pdf.pages[0]
+        page = pdf.pages[0]  
         tables = page.extract_tables()
 
         if tables:
@@ -49,35 +49,35 @@ def extract_rainfall_from_pdf(pdf_path=None, pdf_missing=False):
             # Prepare a DataFrame to hold results
             results = {
                 'Date': datetime.now().strftime('%m/%d/%Y'),
-                'Rainfall': []
+                'Tmax': []
             }
 
-            # Loop through each predefined location and extract Rainfall data
+            # Loop through each predefined location and extract Tmax data
             for index in range(len(predefined_locations)):
-                rainfall = df_extracted.iloc[index, 2] if index < len(df_extracted) else 0.0
-                results['Rainfall'].append(float(rainfall) if pd.notna(rainfall) and rainfall not in ['NA', 'tr', 'TR'] else 0.0)
+                tmax = df_extracted.iloc[index, 1] if index < len(df_extracted) else 0.0
+                results['Tmax'].append(float(tmax) if pd.notna(tmax) and tmax not in ['NA', 'tr', 'TR'] else 0.0)
 
-            # Convert Rainfall data to numeric, errors='coerce' will replace non-convertible values with NaN
-            rainfall_values = pd.to_numeric(results['Rainfall'], errors='coerce')
+            # Convert Tmax data to numeric, errors='coerce' will replace non-convertible values with NaN
+            tmax_values = pd.to_numeric(results['Tmax'], errors='coerce')
 
-            # Calculate total, average, max, and min Rainfall
-            total_rainfall = round(rainfall_values.sum(), 2)  
-            average_rainfall = rainfall_values.mean()  
-            max_rainfall = rainfall_values.max()  
-            min_rainfall = rainfall_values.min()  
+            # Calculate total, average, max, and min Tmax
+            total_tmax = round(tmax_values.sum(),2)  
+            average_tmax = tmax_values.mean()  
+            max_tmax = tmax_values.max()  
+            min_tmax = tmax_values.min()  
 
             # Calculate zone-wise averages for the current day
-            zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
+            zone_averages = {zone: round(tmax_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
                 'Date': [results['Date']],
-                'Variable': ['Rainfall'],
-                **{predefined_locations[i]: [results['Rainfall'][i]] for i in range(len(predefined_locations))},
-                'Total Rainfall': [total_rainfall],
-                'Average Rainfall': [average_rainfall],
-                'Max Rainfall': [max_rainfall],
-                'Min Rainfall': [min_rainfall],
+                'Variable': ['Tmax'],
+                **{predefined_locations[i]: [results['Tmax'][i]] for i in range(len(predefined_locations))},
+                'Total Tmax': [total_tmax],
+                'Average Tmax': [average_tmax],
+                'Max Tmax': [max_tmax],
+                'Min Tmax': [min_tmax],
                 **{f'Average {zone}': [zone_averages[zone]] for zone in zones}
             })
 
@@ -97,7 +97,7 @@ def calculate_8_day_average(df):
         # Append the 8-day averages row to the DataFrame
         zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])
         zone_averages_row['Date'] = df['Date'].max()  # Use the last date for the 8-day average
-        zone_averages_row['Variable'] = '8-Day Average Rainfall'
+        zone_averages_row['Variable'] = '8-Day Average Tmax'
 
         # Append the zone averages to the existing dataframe
         df = pd.concat([df, zone_averages_row], ignore_index=True)
@@ -105,22 +105,25 @@ def calculate_8_day_average(df):
     return df
 
 def main(pdf_path):
-    # Extract Rainfall data from the PDF
-    df_daily_rainfall = extract_rainfall_from_pdf(pdf_path)
+    # Check if the PDF exists, and if not, set pdf_missing to True
+    pdf_missing = not os.path.exists(pdf_path)
 
-    if df_daily_rainfall is not None:
+    # Extract Tmax data from the PDF, or create a default DataFrame if PDF is missing
+    df_daily_tmax = extract_tmax_from_pdf(pdf_path, pdf_missing)
+
+    if df_daily_tmax is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'metstation_rainfall_data.csv')
+        csv_file_path = os.path.join('extracted_data', 'metstation_tmax_data.csv')
 
         # Append to CSV if it already exists, otherwise create a new one
         if os.path.exists(csv_file_path):
             # Load the existing data
             df_existing = pd.read_csv(csv_file_path)
             # Append the new daily data
-            df_combined = pd.concat([df_existing, df_daily_rainfall], ignore_index=True)
+            df_combined = pd.concat([df_existing, df_daily_tmax], ignore_index=True)
         else:
-            df_combined = df_daily_rainfall
+            df_combined = df_daily_tmax
 
         # Calculate 8-day average if enough data exists
         df_combined = calculate_8_day_average(df_combined)
