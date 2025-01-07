@@ -74,19 +74,21 @@ def main(pdf_path):
         df_daily_weather = extract_data_from_pdf(pdf_path)
 
     if df_daily_weather is not None:
-        # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
+        # Save the cleaned DataFrame to an Excel file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'extracted_climate_metdata.csv')
+        excel_file_path = os.path.join('extracted_data', 'extracted_climate_metdata.xlsx')
 
-        # Append to CSV if it already exists, otherwise create a new one
-        if os.path.exists(csv_file_path):
-            df_daily_weather.to_csv(csv_file_path, mode='a', header=False, index=False)
+        # Append to Excel if it already exists
+        if os.path.exists(excel_file_path):
+            with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                df_daily_weather.to_excel(writer, index=False, header=False, startrow=writer.sheets['Sheet1'].max_row)
         else:
-            df_daily_weather.to_csv(csv_file_path, mode='w', header=True, index=False)
+            df_daily_weather.to_excel(excel_file_path, index=False)
 
-        print(f"Data extracted and appended to '{csv_file_path}'.")
+        print(f"Data extracted and appended to '{excel_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
+
 
 if __name__ == "__main__":
     # Get the current date in YYYY-MM-DD format for the filename
