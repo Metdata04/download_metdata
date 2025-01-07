@@ -42,8 +42,7 @@ def extract_hydro_catchment_data(pdf_path, pdf_missing=False):
                                     rainfall_data[station] = float(value)
                                 except ValueError:
                                     rainfall_data[station] = value  # Keep it as a string if not convertible
- 
-                                
+                                 
         except Exception as e:
             print(f"Error reading PDF: {e}")
             rainfall_data = {station: 'NA' for station in stations}  # If PDF error, use 'NA'
@@ -66,17 +65,16 @@ if __name__ == "__main__":
 
     hydro_data_df = extract_hydro_catchment_data(pdf_path, pdf_missing)
 
-    # Print the DataFrame for debugging
-    #print(hydro_data_df)
-
-    # Save the extracted data to a CSV file
+    # Save the extracted data to an Excel file
     os.makedirs('extracted_data', exist_ok=True)
-    csv_file_path = os.path.join('extracted_data', 'hydro_catchment_data.csv')
+    excel_file_path = os.path.join('extracted_data', 'hydro_catchment_data.xlsx')
 
-    # Append to CSV if it already exists, otherwise create a new one
-    if os.path.exists(csv_file_path):
-        hydro_data_df.to_csv(csv_file_path, mode='a', header=False, index=False)
+    # Check if the Excel file exists to determine whether to append or create a new one
+    if os.path.exists(excel_file_path):
+        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a') as writer:
+            hydro_data_df.to_excel(writer, sheet_name='Data', index=False, header=False)
     else:
-        hydro_data_df.to_csv(csv_file_path, index=False)
+        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='w') as writer:
+            hydro_data_df.to_excel(writer, sheet_name='Data', index=False)
 
-    print(f"Hydro catchment data extracted and saved to '{csv_file_path}'.")
+    print(f"Hydro catchment data extracted and saved to '{excel_file_path}'.")

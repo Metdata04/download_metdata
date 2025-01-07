@@ -115,26 +115,28 @@ def main(pdf_path):
         df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_path)
 
     if df_daily_rainfall is not None:
-        # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
+        # Save the cleaned DataFrame to an Excel file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'metstation_rainfall.csv')
+        excel_file_path = os.path.join('extracted_data', 'metstation_rainfall.xlsx')
 
-        # Append to CSV if it already exists, otherwise create a new one
-        if os.path.exists(csv_file_path):
-            # Load the existing data
-            df_existing = pd.read_csv(csv_file_path)
-            # Append the new daily data
-            df_combined = pd.concat([df_existing, df_daily_rainfall], ignore_index=True)
-        else:
-            df_combined = df_daily_rainfall
+        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a' if os.path.exists(excel_file_path) else 'w') as writer:
+            # Write the daily data to the 'Daily Rainfall' sheet
+            df_daily_rainfall.to_excel(writer, sheet_name='Daily Rainfall', index=False)
 
-        # Calculate 8-day average if enough data exists
-        df_combined = calculate_8_day_average(df_combined)
+            # Load the existing data if the file exists
+            if os.path.exists(excel_file_path):
+                df_existing = pd.read_excel(excel_file_path, sheet_name='Daily Rainfall')
+                df_combined = pd.concat([df_existing, df_daily_rainfall], ignore_index=True)
+            else:
+                df_combined = df_daily_rainfall
 
-        # Save the updated data back to the same CSV
-        df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
+            # Calculate 8-day average if enough data exists
+            df_combined = calculate_8_day_average(df_combined)
 
-        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
+            # Write the updated data (including 8-day averages) to the 'Rainfall Data' sheet
+            df_combined.to_excel(writer, sheet_name='Rainfall Data', index=False)
+
+        print(f"Data (including 8-day averages) saved to '{excel_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
