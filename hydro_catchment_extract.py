@@ -73,7 +73,7 @@ if __name__ == "__main__":
     if os.path.exists(excel_file_path):
         from openpyxl import load_workbook
 
-        # Load the workbook to determine the last row in the sheet
+        # Load the workbook to determine the last row in the sheets
         wb = load_workbook(excel_file_path)
         if sheet_name in wb.sheetnames:
             startrow = wb[sheet_name].max_row
