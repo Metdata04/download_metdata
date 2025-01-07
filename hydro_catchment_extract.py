@@ -68,12 +68,24 @@ if __name__ == "__main__":
     os.makedirs('extracted_data', exist_ok=True)
     excel_file_path = os.path.join('extracted_data', 'hydro_catchment_data.xlsx')
 
-    # Check if the Excel file exists to determine whether to append or create a new one
+    # Append data to the existing sheet or create a new file
+    sheet_name = 'Data'  # Specify the sheet name
     if os.path.exists(excel_file_path):
-        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a') as writer:
-            hydro_data_df.to_excel(writer, sheet_name='Data', index=False, header=False)
+        from openpyxl import load_workbook
+
+        # Load the workbook to determine the last row in the sheet
+        wb = load_workbook(excel_file_path)
+        if sheet_name in wb.sheetnames:
+            startrow = wb[sheet_name].max_row
+        else:
+            startrow = 0
+        wb.close()
+
+        # Append data to the sheet
+        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+            hydro_data_df.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=startrow)
     else:
-        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='w') as writer:
-            hydro_data_df.to_excel(writer, sheet_name='Data', index=False)
+        # Create a new Excel file with the specified sheet
+        hydro_data_df.to_excel(excel_file_path, sheet_name=sheet_name, index=False)
 
     print(f"Hydro catchment data extracted and saved to '{excel_file_path}'.")
