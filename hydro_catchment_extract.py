@@ -69,7 +69,7 @@ if __name__ == "__main__":
     excel_file_path = os.path.join('extracted_data', 'hydro_catchment_data.xlsx')
 
     # Append data to the existing sheet or create a new file
-    sheet_name = 'Data'  # Specify the sheet name
+    sheet_name = 'hydro_catchment_data'  
     if os.path.exists(excel_file_path):
         from openpyxl import load_workbook
 
