@@ -80,10 +80,9 @@ def main(pdf_path):
 
         # Save to Excel, append data if file already exists
         if os.path.exists(excel_file_path):
-            with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a') as writer:
-                # Get the first sheet name dynamically
-                sheet_name = writer.sheets.keys().__iter__().__next__()
-                df_daily_weather.to_excel(writer, index=False, header=False, startrow=writer.sheets[sheet_name].max_row)
+            with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
+                sheet_name = list(writer.sheets.keys())[0]  # Get the first sheet name dynamically
+                df_daily_weather.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=writer.sheets[sheet_name].max_row)
         else:
             df_daily_weather.to_excel(excel_file_path, index=False)
 
