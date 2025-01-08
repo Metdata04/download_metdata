@@ -3,12 +3,12 @@ import pdfplumber
 import pandas as pd
 from datetime import datetime
 
-def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
+def extract_data_from_pdf(pdf_path=None, pdf_missing=False): 
     predefined_locations = [
-        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo",
-        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake",
-        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa",
-        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana",
+        "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
+        "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", "Katunayake", 
+        "Kurunagala", "Maha Illuppallama", "Mannar", "Polonnaruwa", 
+        "Nuwara Eliya", "Pothuvil", "Puttalam", "Rathmalana", 
         "Ratnapura", "Trincomalee", "Vavuniya", "Mattla", "Mullaitivu"
     ]
 
@@ -23,7 +23,7 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
         return pd.DataFrame(data)
 
     with pdfplumber.open(pdf_path) as pdf:
-        page = pdf.pages[0]
+        page = pdf.pages[0]  
         tables = page.extract_tables()
 
         if tables:
@@ -65,32 +65,23 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
 
 
 def main(pdf_path):
-    # Check if the PDF file exists
-    if not os.path.exists(pdf_path):
-        print(f"PDF file not found: {pdf_path}. Filling with 'NA' values.")
-        df_daily_weather = extract_data_from_pdf(pdf_missing=True)
-    else:
-        # Extract the data from the downloaded PDF
-        df_daily_weather = extract_data_from_pdf(pdf_path)
+    # Extract the data from the downloaded PDF
+    df_daily_weather = extract_data_from_pdf(pdf_path)
 
     if df_daily_weather is not None:
-        # Save the cleaned DataFrame to an Excel file in 'extracted_data' folder
+        # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        excel_file_path = os.path.join('extracted_data', 'extracted_climate_metdata.xlsx')
+        csv_file_path = os.path.join('extracted_data', 'extracted_climate_metdata.csv')
 
-        # Save to Excel, append data if file already exists
-        if os.path.exists(excel_file_path):
-            with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-                sheet_name = list(writer.sheets.keys())[0]  # Get the first sheet name dynamically
-                df_daily_weather.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=writer.sheets[sheet_name].max_row)
+        # Append to CSV if it already exists, otherwise create a new one
+        if os.path.exists(csv_file_path):
+            df_daily_weather.to_csv(csv_file_path, mode='a', header=False, index=False)
         else:
-            df_daily_weather.to_excel(excel_file_path, index=False)
+            df_daily_weather.to_csv(csv_file_path, mode='w', header=True, index=False)
 
-        print(f"Data extracted and saved to '{excel_file_path}'.")
+        print(f"Data extracted and appended to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
-
-
 
 if __name__ == "__main__":
     # Get the current date in YYYY-MM-DD format for the filename

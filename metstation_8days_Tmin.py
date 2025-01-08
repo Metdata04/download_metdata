@@ -61,13 +61,13 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
             tmin_values = pd.to_numeric(results['Tmin'], errors='coerce')
 
             # Calculate total, average, max, and min Tmin
-            total_tmin = round(tmin_values.sum(), 2) 
+            total_tmin = round(tmin_values.sum(),2) 
             average_tmin = tmin_values.mean()  
             max_tmin = tmin_values.max()  
             min_tmin = tmin_values.min()  
 
             # Calculate zone-wise averages for the current day
-            zone_averages = {zone: round(tmin_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
+            zone_averages = {zone: round(tmin_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
@@ -105,34 +105,30 @@ def calculate_8_day_average(df):
     return df
 
 def main(pdf_path):
-    # Ensure 'metdata' folder exists
-    os.makedirs('metdata', exist_ok=True)
-    
     # Extract Tmin data from the PDF
     df_daily_tmin = extract_tmin_from_pdf(pdf_path)
 
     if df_daily_tmin is not None:
-        # Save the cleaned DataFrame to an Excel file in 'extracted_data' folder
+        # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        excel_file_path = os.path.join('extracted_data', 'metstation_tmin_data.xlsx')
+        csv_file_path = os.path.join('extracted_data', 'metstation_tmin_data.csv')
 
-        # Append to Excel if it already exists, otherwise create a new one
-        if os.path.exists(excel_file_path):
-            # Load the existing data and append new data
-            with pd.ExcelWriter(excel_file_path, mode='a', if_sheet_exists='overlay') as writer:
-                df_daily_tmin.to_excel(writer, index=False, header=False, sheet_name='Tmin Data')
+        # Append to CSV if it already exists, otherwise create a new one
+        if os.path.exists(csv_file_path):
+            # Load the existing data
+            df_existing = pd.read_csv(csv_file_path)
+            # Append the new daily data
+            df_combined = pd.concat([df_existing, df_daily_tmin], ignore_index=True)
         else:
-            with pd.ExcelWriter(excel_file_path, mode='w') as writer:
-                df_daily_tmin.to_excel(writer, index=False, header=True, sheet_name='Tmin Data')
+            df_combined = df_daily_tmin
 
         # Calculate 8-day average if enough data exists
-        df_combined = calculate_8_day_average(df_daily_tmin)
+        df_combined = calculate_8_day_average(df_combined)
 
-        # Save the updated data back to the same Excel file
-        with pd.ExcelWriter(excel_file_path, mode='w') as writer:
-            df_combined.to_excel(writer, index=False, header=True, sheet_name='Tmin Data')
+        # Save the updated data back to the same CSV
+        df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
 
-        print(f"Data (including 8-day averages) saved to '{excel_file_path}'.")
+        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 

@@ -42,7 +42,8 @@ def extract_hydro_catchment_data(pdf_path, pdf_missing=False):
                                     rainfall_data[station] = float(value)
                                 except ValueError:
                                     rainfall_data[station] = value  # Keep it as a string if not convertible
-                                 
+ 
+                                
         except Exception as e:
             print(f"Error reading PDF: {e}")
             rainfall_data = {station: 'NA' for station in stations}  # If PDF error, use 'NA'
@@ -55,6 +56,7 @@ def extract_hydro_catchment_data(pdf_path, pdf_missing=False):
     return df
 
 
+# Example usage
 if __name__ == "__main__":
     date_string = datetime.now().strftime('%Y-%m-%d')
     pdf_path = f'metdata/daily_climate_update_{date_string}.pdf'  
@@ -64,28 +66,17 @@ if __name__ == "__main__":
 
     hydro_data_df = extract_hydro_catchment_data(pdf_path, pdf_missing)
 
-    # Save the extracted data to an Excel file
+    # Print the DataFrame for debugging
+    #print(hydro_data_df)
+
+    # Save the extracted data to a CSV file
     os.makedirs('extracted_data', exist_ok=True)
-    excel_file_path = os.path.join('extracted_data', 'hydro_catchment_data.xlsx')
+    csv_file_path = os.path.join('extracted_data', 'hydro_catchment_data.csv')
 
-    # Append data to the existing sheet or create a new file
-    sheet_name = 'hydro_catchment_data'  
-    if os.path.exists(excel_file_path):
-        from openpyxl import load_workbook
-
-        # Load the workbook to determine the last row in the sheets
-        wb = load_workbook(excel_file_path)
-        if sheet_name in wb.sheetnames:
-            startrow = wb[sheet_name].max_row
-        else:
-            startrow = 0
-        wb.close()
-
-        # Append data to the sheet
-        with pd.ExcelWriter(excel_file_path, engine='openpyxl', mode='a', if_sheet_exists='overlay') as writer:
-            hydro_data_df.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=startrow)
+    # Append to CSV if it already exists, otherwise create a new one
+    if os.path.exists(csv_file_path):
+        hydro_data_df.to_csv(csv_file_path, mode='a', header=False, index=False)
     else:
-        # Create a new Excel file with the specified sheet
-        hydro_data_df.to_excel(excel_file_path, sheet_name=sheet_name, index=False)
+        hydro_data_df.to_csv(csv_file_path, index=False)
 
-    print(f"Hydro catchment data extracted and saved to '{excel_file_path}'.")
+    print(f"Hydro catchment data extracted and saved to '{csv_file_path}'.")
