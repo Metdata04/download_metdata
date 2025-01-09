@@ -27,7 +27,7 @@ plt.plot(df_last_30_days['Date'], df_last_30_days['Average Tmax'], color='blue',
 plt.ylim(20, 40)
 
 # Customize the plot
-plt.title('Daily Average Tmax Over the Past 30 Days', fontsize=14, weight='bold')
+plt.title('Daily Average Tmax All Over the Srilanka Past 30 Days', fontsize=14, weight='bold')
 plt.xlabel('Date', fontsize=12)
 plt.ylabel('Average Tmax (°C)', fontsize=12)
 plt.grid(axis='y', linestyle='--', alpha=0.7)

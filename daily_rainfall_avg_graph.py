@@ -24,7 +24,7 @@ plt.figure(figsize=(12, 6))
 plt.bar(df_last_30_days['Date'], df_last_30_days['Average Rainfall'], color='blue', width=0.8, label='Average Rainfall')
 
 # Customize the plot
-plt.title('Daily Average Rainfall Over the Past 30 Days', fontsize=14, weight='bold')
+plt.title('Daily Average Rainfall All Over the Srilanka Past 30 Days', fontsize=14, weight='bold')
 plt.xlabel('Date', fontsize=12)
 plt.ylabel('Average Rainfall (mm)', fontsize=12)
 plt.grid(axis='y', linestyle='--', alpha=0.7)

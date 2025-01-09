@@ -27,7 +27,7 @@ plt.plot(df_last_30_days['Date'], df_last_30_days['Average Tmin'], color='purple
 plt.ylim(15, 35)
 
 # Customize the plot
-plt.title('Daily Average Tmin Over the Past 30 Days', fontsize=14, weight='bold')
+plt.title('Daily Average Tmin All Over the Srilanka Past 30 Days', fontsize=14, weight='bold')
 plt.xlabel('Date', fontsize=12)
 plt.ylabel('Average Tmin (°C)', fontsize=12)
 plt.grid(axis='y', linestyle='--', alpha=0.7)
