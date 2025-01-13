@@ -1,7 +1,7 @@
 import os
 import pdfplumber
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Define the list of hydro catchment stations (fixed)
 stations = [
@@ -42,16 +42,15 @@ def extract_hydro_catchment_data(pdf_path, pdf_missing=False):
                                     rainfall_data[station] = float(value)
                                 except ValueError:
                                     rainfall_data[station] = value  # Keep it as a string if not convertible
- 
-                                
+
         except Exception as e:
             print(f"Error reading PDF: {e}")
             rainfall_data = {station: 'NA' for station in stations}  # If PDF error, use 'NA'
 
-    # Create a DataFrame with the date and the extracted rainfall data
-    current_date = datetime.now().strftime('%m/%d/%Y')
+    # Adjust the date to yesterday's date
+    yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')
     df = pd.DataFrame([rainfall_data])
-    df.insert(0, 'Date', current_date)  # Add the Date column at the start
+    df.insert(0, 'Date', yesterday_date)  # Add the Date column at the start
 
     return df
 
@@ -65,9 +64,6 @@ if __name__ == "__main__":
     pdf_missing = not os.path.exists(pdf_path)
 
     hydro_data_df = extract_hydro_catchment_data(pdf_path, pdf_missing)
-
-    # Print the DataFrame for debugging
-    #print(hydro_data_df)
 
     # Save the extracted data to a CSV file
     os.makedirs('extracted_data', exist_ok=True)
