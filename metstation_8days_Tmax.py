@@ -46,9 +46,12 @@ def extract_tmax_from_pdf(pdf_path=None, pdf_missing=False):
             # Extract rows 4 to 28 (zero-indexed, hence 3:27)
             df_extracted = df.iloc[3:27]
 
+            # Calculate yesterday's date
+            yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')
+
             # Prepare a DataFrame to hold results
             results = {
-                'Date': datetime.now().strftime('%m/%d/%Y'),
+                'Date': yesterday_date,  # Use yesterday's date
                 'Tmax': []
             }
 
@@ -61,13 +64,13 @@ def extract_tmax_from_pdf(pdf_path=None, pdf_missing=False):
             tmax_values = pd.to_numeric(results['Tmax'], errors='coerce')
 
             # Calculate total, average, max, and min Tmax
-            total_tmax = round(tmax_values.sum(),2)  
+            total_tmax = round(tmax_values.sum(), 2)  
             average_tmax = tmax_values.mean()  
             max_tmax = tmax_values.max()  
             min_tmax = tmax_values.min()  
 
             # Calculate zone-wise averages for the current day
-            zone_averages = {zone: round(tmax_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
+            zone_averages = {zone: round(tmax_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
@@ -101,8 +104,6 @@ def calculate_8_day_average(df):
 
         # Append the zone averages to the existing dataframe
         df = pd.concat([df, zone_averages_row], ignore_index=True)
-
-    return df
 
     return df
 

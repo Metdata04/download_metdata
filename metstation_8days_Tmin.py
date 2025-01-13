@@ -27,7 +27,7 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
-            'Date': [datetime.now().strftime('%m/%d/%Y')],
+            'Date': [(datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')],  # Yesterday's date
             'Variable': ['Tmin'],
         }
         for location in predefined_locations:
@@ -48,7 +48,7 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Prepare a DataFrame to hold results
             results = {
-                'Date': datetime.now().strftime('%m/%d/%Y'),
+                'Date': [(datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')],  # Yesterday's date
                 'Tmin': []
             }
 
@@ -71,7 +71,7 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
-                'Date': [results['Date']],
+                'Date': [results['Date'][0]],
                 'Variable': ['Tmin'],
                 **{predefined_locations[i]: [results['Tmin'][i]] for i in range(len(predefined_locations))},
                 'Total Tmin': [total_tmin],
