@@ -1,7 +1,7 @@
 import os
 import pdfplumber
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def extract_data_from_pdf(pdf_path=None, pdf_missing=False): 
     predefined_locations = [
@@ -15,7 +15,7 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
     if pdf_missing:
         # If the PDF is missing, create a DataFrame with 'NA' values for all locations
         data = {
-            'Date': [datetime.now().strftime('%m/%d/%Y')] * 3,
+            'Date': [(datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')] * 3,
             'Variable': ['Tmax', 'Tmin', 'Rainfall'],
         }
         for location in predefined_locations:
@@ -35,7 +35,7 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Prepare a DataFrame to hold results
             results = {
-                'Date': datetime.now().strftime('%m/%d/%Y'),
+                'Date': (datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y'),  # Use yesterday's date
                 'Tmax': [],
                 'Tmin': [],
                 'Rainfall': []
@@ -79,9 +79,10 @@ def main(pdf_path):
         else:
             df_daily_weather.to_csv(csv_file_path, mode='w', header=True, index=False)
 
-        print(f"Data extracted and appended to '{csv_file_path}'.")
+        print(f"Data extracted and appended to '{csv_file_path}' with yesterday's date.")
     else:
         print("No table found in the PDF or no matching locations found.")
+
 
 if __name__ == "__main__":
     # Get the current date in YYYY-MM-DD format for the filename
