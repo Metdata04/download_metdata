@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 
 # Predefined locations for Rainfall data extraction
 predefined_locations = [
-    "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
-    "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", 
-    "Katunayake", "Kurunagala", "Maha Illuppallama", "Mannar", 
-    "Polonnaruwa", "Nuwara Eliya", "Pothuvil", "Puttalam", 
-    "Rathmalana", "Ratnapura", "Trincomalee", "Vavuniya", "Mattala", 
+    "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo",
+    "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota",
+    "Katunayake", "Kurunagala", "Maha Illuppallama", "Mannar",
+    "Polonnaruwa", "Nuwara Eliya", "Pothuvil", "Puttalam",
+    "Rathmalana", "Ratnapura", "Trincomalee", "Vavuniya", "Mattala",
     "Mullaitivu"
 ]
 
@@ -24,10 +24,13 @@ zones = {
 }
 
 def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
+    # Get yesterday's date
+    yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')
+    
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
-            'Date': [datetime.now().strftime('%m/%d/%Y')],
+            'Date': [yesterday_date],
             'Variable': ['Rainfall'],
         }
         for location in predefined_locations:
@@ -48,7 +51,7 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Prepare a DataFrame to hold results
             results = {
-                'Date': datetime.now().strftime('%m/%d/%Y'),
+                'Date': yesterday_date,
                 'Rainfall': []
             }
 
@@ -62,12 +65,12 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Calculate total, average, max, and min Rainfall
             total_rainfall = rainfall_values.sum()  
-            average_rainfall =round(rainfall_values.mean(),2)  
+            average_rainfall = round(rainfall_values.mean(), 2)  
             max_rainfall = rainfall_values.max()  
             min_rainfall = rainfall_values.min()  
 
             # Calculate zone-wise averages for the current day (we will later calculate for 8 days)
-            zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
+            zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
@@ -84,7 +87,6 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
             return final_df
 
     return None
-
 def calculate_8_day_average(df):
     # Only calculate 8-day average if the current length is a multiple of 8
     if len(df) % 8 == 0 and len(df) >= 8:
@@ -104,10 +106,12 @@ def calculate_8_day_average(df):
 
     return df
 
-
 def main(pdf_path):
+    # Check if the PDF exists
+    pdf_missing = not os.path.exists(pdf_path)
+
     # Extract the data from the downloaded PDF
-    df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_path)
+    df_daily_rainfall = extract_rainfall_data_from_pdf(pdf_path, pdf_missing)
 
     if df_daily_rainfall is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
@@ -123,13 +127,12 @@ def main(pdf_path):
         else:
             df_combined = df_daily_rainfall
 
-        # Calculate 8-day average if enough data exists
+ # Calculate 8-day average if enough data exists
         df_combined = calculate_8_day_average(df_combined)
-
         # Save the updated data back to the same CSV
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
-
         print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
+        print(f"Data saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
