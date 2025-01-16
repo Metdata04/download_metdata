@@ -90,7 +90,7 @@ def extract_tmax_from_pdf(pdf_path=None, pdf_missing=False):
 
 def calculate_8_day_average(df):
     # Only calculate 8-day average if the current length is a multiple of 8
-    if len(df) % 8 == 0 and len(df) >= 8:
+    if len(df) % 7 == 0 and len(df) >= 7:
         # Calculate 8-day averages for each zone
         zone_averages_8_days = {}
         for zone, stations in zones.items():
