@@ -50,7 +50,7 @@ jobs:
     - name: Add Metdata Files
       run: |
         git add metdata/*  # Add all files in the metdata folder
-        git commit -m "Add daily climate update PDF - ${{ env.current_date }}" || echo "No changes to commit"
+        git commit -m "Add daily climate update PDF - ${{ steps.date.outputs.current_date }}" || echo "No changes to commit"
 
     - name: Push Changes
       env:
