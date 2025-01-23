@@ -108,8 +108,11 @@ def calculate_8_day_average(df):
     return df
 
 def main(pdf_path):
-    # Extract Tmax data from the PDF
-    df_daily_tmax = extract_tmax_from_pdf(pdf_path)
+    # Check if the PDF file exists
+    if not os.path.exists(pdf_path):
+        df_daily_tmax = extract_tmax_from_pdf(pdf_missing=True)
+    else:
+        df_daily_tmax = extract_tmax_from_pdf(pdf_path)
 
     if df_daily_tmax is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
