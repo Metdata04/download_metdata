@@ -55,7 +55,7 @@ def extract_hydro_catchment_data(pdf_path, pdf_missing=False):
     return df
 
 
-# Example usage
+
 if __name__ == "__main__":
     date_string = datetime.now().strftime('%Y-%m-%d')
     pdf_path = f'metdata/daily_climate_update_{date_string}.pdf'  

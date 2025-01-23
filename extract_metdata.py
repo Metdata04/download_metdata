@@ -65,8 +65,10 @@ def extract_data_from_pdf(pdf_path=None, pdf_missing=False):
 
 
 def main(pdf_path):
-    # Extract the data from the downloaded PDF
-    df_daily_weather = extract_data_from_pdf(pdf_path)
+    if not os.path.exists(pdf_path):
+        df_daily_weather = extract_data_from_pdf(pdf_missing=True)
+    else:
+        df_daily_weather = extract_data_from_pdf(pdf_path)
 
     if df_daily_weather is not None:
         # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
@@ -79,10 +81,9 @@ def main(pdf_path):
         else:
             df_daily_weather.to_csv(csv_file_path, mode='w', header=True, index=False)
 
-        print(f"Data extracted and appended to '{csv_file_path}' with yesterday's date.")
+        print(f"Data saved to '{csv_file_path}'.")
     else:
-        print("No table found in the PDF or no matching locations found.")
-
+        print("No data was extracted.")
 
 if __name__ == "__main__":
     # Get the current date in YYYY-MM-DD format for the filename
