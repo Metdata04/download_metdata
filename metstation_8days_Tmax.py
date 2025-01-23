@@ -27,7 +27,7 @@ def extract_tmax_from_pdf(pdf_path=None, pdf_missing=False):
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
-            'Date': [datetime.now().strftime('%m/%d/%Y')],
+            'Date': [(datetime.now()-timedelta(days=1)).strftime('%m/%d/%Y')],
             'Variable': ['Tmax'],
         }
         for location in predefined_locations:
