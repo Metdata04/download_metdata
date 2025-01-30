@@ -97,7 +97,7 @@ def calculate_zone_average(df):
         previous_wednesday = today - timedelta(days=1)  # Yesterday
 
         # Convert DataFrame Date column to datetime
-        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
+        # df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
         
         # Filter DataFrame for the required range
         filtered_df = df[(df['Date'] >= previous_thursday) & (df['Date'] <= previous_wednesday)]
