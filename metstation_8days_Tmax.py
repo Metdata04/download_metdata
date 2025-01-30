@@ -88,24 +88,30 @@ def extract_tmax_from_pdf(pdf_path=None, pdf_missing=False):
 
     return None
 
-def calculate_8_day_average(df):
-    # Only calculate 8-day average if the current length is a multiple of 8
-    if len(df) % 7 == 0 and len(df) >= 7:
-        # Calculate 8-day averages for each zone
-        zone_averages_8_days = {}
-        for zone, stations in zones.items():
-            station_columns = [station for station in stations if station in df.columns]
-            zone_averages_8_days[f'8-Day Average {zone}'] = round(df[station_columns].tail(7).mean().mean(), 2)
+def calculate_weekly_average(df):
+    # Filter the data to only include dates from Friday to Thursday
+    df['Date'] = pd.to_datetime(df['Date'])
+    df['Weekday'] = df['Date'].dt.weekday  # Monday = 0, Sunday = 6
 
-        # Append the 8-day averages row to the DataFrame
-        zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])
-        zone_averages_row['Date'] = df['Date'].max()  # Use the last date for the 8-day average
-        zone_averages_row['Variable'] = '8-Day Average Tmax'
+    # Get the most recent Friday
+    latest_date = df['Date'].max()
+    friday_date = latest_date - timedelta(days=(latest_date.weekday() - 4) % 7)  # Find the last Friday
 
-        # Append the zone averages to the existing dataframe
-        df = pd.concat([df, zone_averages_row], ignore_index=True)
+    # Filter the data for the week from Friday to Thursday
+    week_data = df[(df['Date'] >= friday_date) & (df['Date'] <= friday_date + timedelta(days=6))]
 
-    return df
+    # Calculate weekly zone averages
+    weekly_zone_averages = {}
+    for zone, stations in zones.items():
+        station_columns = [station for station in stations if station in week_data.columns]
+        weekly_zone_averages[f'Weekly Average {zone}'] = round(week_data[station_columns].mean().mean(), 2)
+
+    # Append the weekly averages row to the DataFrame
+    weekly_averages_row = pd.DataFrame(weekly_zone_averages, index=[0])
+    weekly_averages_row['Date'] = friday_date.strftime('%m/%d/%Y')  # Set the date to the Friday of the week
+    weekly_averages_row['Variable'] = 'Weekly Average Tmax'
+
+    return pd.concat([df, weekly_averages_row], ignore_index=True)
 
 def main(pdf_path):
     # Check if the PDF file exists
@@ -128,13 +134,13 @@ def main(pdf_path):
         else:
             df_combined = df_daily_tmax
 
-        # Calculate 8-day average if enough data exists
-        df_combined = calculate_8_day_average(df_combined)
+        # Calculate weekly averages
+        df_combined = calculate_weekly_average(df_combined)
 
         # Save the updated data back to the same CSV
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
 
-        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
+        print(f"Data (including weekly averages) saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
