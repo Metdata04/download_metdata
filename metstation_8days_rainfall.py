@@ -92,34 +92,24 @@ def calculate_zone_average(df):
     # Get the current date
     today = datetime.now()
 
-    # Find the previous Thursday (last week's Thursday)
+    # Find the previous Thursday
     days_since_thursday = today.weekday() - 3  # 3 is Thursday
     if days_since_thursday < 0:
         days_since_thursday += 7  # Adjust if today is before Thursday in the week
     last_thursday = today - timedelta(days=days_since_thursday)
 
-    # Find the Wednesday of the previous week (6 days before last week's Thursday)
-    previous_wednesday = last_thursday - timedelta(days=1)
+    # Find this Wednesday (6 days after Thursday)
+    this_wednesday = last_thursday + timedelta(days=6)
 
     # Filter the DataFrame to only include data from the previous Thursday to this Wednesday
-    filtered_df = df[(df['Date'] >= previous_wednesday.strftime('%Y-%m-%d')) & (df['Date'] <= last_thursday.strftime('%Y-%m-%d'))]
+    filtered_df = df[(df['Date'] >= last_thursday.strftime('%Y-%m-%d')) & (df['Date'] <= this_wednesday.strftime('%Y-%m-%d'))]
     
-    # Check if there is enough data for the full week
+    # If we don't have data for the full week, skip calculating averages
     if len(filtered_df) < 7:
-        print(f"Not enough data for the week from {previous_wednesday.strftime('%Y-%m-%d')} to {last_thursday.strftime('%Y-%m-%d')}.")
-        # You can either return the unmodified dataframe or fill missing data with zeros
-        missing_dates = pd.date_range(previous_wednesday, last_thursday).difference(pd.to_datetime(filtered_df['Date']))
-        if not missing_dates.empty:
-            print(f"Missing data for the following dates: {missing_dates}")
-        # Fill missing data with zeros or other placeholders
-        for missing_date in missing_dates:
-            missing_row = {col: 0.0 for col in df.columns if col not in ['Date', 'Variable']}
-            missing_row['Date'] = missing_date.strftime('%Y-%m-%d')
-            missing_row['Variable'] = 'Rainfall'
-            df = df.append(missing_row, ignore_index=True)
-        return df  # Return the updated DataFrame
-
-    # Calculate zone averages for the previous Thursday to Wednesday period
+        print(f"Not enough data for the week from {last_thursday.strftime('%Y-%m-%d')} to {this_wednesday.strftime('%Y-%m-%d')}.")
+        return df  # Return the unmodified DataFrame
+    
+    # Calculate zone averages for the Thursday to Wednesday period
     zone_averages = {}
     for zone, stations in zones.items():
         station_columns = [station for station in stations if station in filtered_df.columns]
@@ -128,13 +118,12 @@ def calculate_zone_average(df):
     
     # Create a new row with the zone averages and append it to the DataFrame
     zone_averages_row = pd.DataFrame(zone_averages, index=[0])
-    zone_averages_row['Date'] = last_thursday.strftime('%Y-%m-%d')  # Use last Thursday's date for the average
+    zone_averages_row['Date'] = this_wednesday.strftime('%Y-%m-%d')  # Use Wednesday's date for the average
     zone_averages_row['Variable'] = 'Weekly Zone Average'
 
     df = pd.concat([df, zone_averages_row], ignore_index=True)
 
     return df
-
 
 def main(pdf_path):
     # Check if the PDF exists
