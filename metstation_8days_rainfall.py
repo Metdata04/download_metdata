@@ -110,14 +110,15 @@ def calculate_zone_average(df):
     #     return df  # Return the unmodified DataFrame
     
     # Calculate zone averages for the Thursday to Wednesday period
-    if len(filtered_df) % 7 == 0 and len(filtered_df) >= 7:
-        zone_averages = {}
-        for zone, stations in zones.items():
-            station_columns = [station for station in stations if station in filtered_df.columns]
-            if station_columns:
-                df[f'Zone Average {zone}'] = round(filtered_df[station_columns].mean(axis=1), 2)
-    
-    
+    zone_averages = {}
+    for zone, stations in zones.items():
+        # Select columns corresponding to the stations
+        station_columns = [station for station in stations if station in filtered_df.columns]
+        
+        if station_columns:
+            # Calculate average for each zone by considering the columns for each station
+            zone_averages[f'Zone Average {zone}'] = round(filtered_df[station_columns].mean(axis=1).mean(), 2)
+
     # Create a new row with the zone averages and append it to the DataFrame
     zone_averages_row = pd.DataFrame(zone_averages, index=[0])
     zone_averages_row['Date'] = last_wednesday.strftime('%Y-%m-%d')  # Use Wednesday's date for the average
