@@ -69,7 +69,7 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
             max_rainfall = rainfall_values.max()  
             min_rainfall = rainfall_values.min()  
 
-            # Calculate zone-wise averages for the current day (we will later calculate for 8 days)
+            # Calculate zone-wise averages for the current day (we will later calculate for 7 days)
             zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
@@ -87,22 +87,39 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
             return final_df
 
     return None
-def calculate_8_day_average(df):
-    # Only calculate 8-day average if the current length is a multiple of 8
-    if len(df) % 7 == 0 and len(df) >= 7:
-        # Calculate 8-day averages for each zone
-        zone_averages_8_days = {}
-        for zone, stations in zones.items():
-            station_columns = [station for station in stations if station in df.columns]
-            zone_averages_8_days[f'8-Day Average {zone}'] = round(df[station_columns].tail(7).mean().mean(), 2)
 
-        # Append the 8-day averages row to the DataFrame
-        zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])
-        zone_averages_row['Date'] = df['Date'].max()  # Use the last date for the 8-day average
-        zone_averages_row['Variable'] = '8-Day Average'
+def calculate_zone_average(df):
+    # Get the most recent Friday date to start the 7-day period
+    today = datetime.now()
+    days_since_friday = today.weekday() - 4  # 4 is Friday
+    if days_since_friday < 0:
+        days_since_friday += 7  # Adjust if today is before Friday in the week
+    last_friday = today - timedelta(days=days_since_friday)
+    
+    # Calculate the date for the Thursday of that week
+    last_thursday = last_friday + timedelta(days=6)
 
-        # Append the zone averages to the existing dataframe
-        df = pd.concat([df, zone_averages_row], ignore_index=True)
+    # Filter the DataFrame to only include data from the previous Friday to Thursday
+    filtered_df = df[(df['Date'] >= last_friday.strftime('%Y-%m-%d')) & (df['Date'] <= last_thursday.strftime('%Y-%m-%d'))]
+    
+    # If we don't have data for the full week, skip calculating averages
+    if len(filtered_df) < 7:
+        print(f"Not enough data for the week from {last_friday.strftime('%Y-%m-%d')} to {last_thursday.strftime('%Y-%m-%d')}.")
+        return df  # Return the unmodified DataFrame
+    
+    # Calculate zone averages for the Friday to Thursday period
+    zone_averages = {}
+    for zone, stations in zones.items():
+        station_columns = [station for station in stations if station in filtered_df.columns]
+        if station_columns:
+            zone_averages[f'Zone Average {zone}'] = round(filtered_df[station_columns].mean().mean(), 2)
+    
+    # Create a new row with the zone averages and append it to the DataFrame
+    zone_averages_row = pd.DataFrame(zone_averages, index=[0])
+    zone_averages_row['Date'] = last_thursday.strftime('%Y-%m-%d')  # Use Thursday's date for the average
+    zone_averages_row['Variable'] = 'Weekly Zone Average'
+
+    df = pd.concat([df, zone_averages_row], ignore_index=True)
 
     return df
 
@@ -127,12 +144,12 @@ def main(pdf_path):
         else:
             df_combined = df_daily_rainfall
 
- # Calculate 8-day average if enough data exists
-        df_combined = calculate_8_day_average(df_combined)
+        # Calculate weekly averages (Friday to Thursday)
+        df_combined = calculate_zone_average(df_combined)
+
         # Save the updated data back to the same CSV
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
-        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
-        print(f"Data saved to '{csv_file_path}'.")
+        print(f"Data (including weekly averages) saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
