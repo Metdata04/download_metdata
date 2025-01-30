@@ -104,7 +104,7 @@ def calculate_weekly_average(df):
     previous_previous_thursday = previous_thursday - timedelta(days=7)
 
     # Find the previous Wednesday (one day before Thursday)
-    previous_wednesday = today - timedelta(days=1)
+    previous_wednesday = previous_thursday - timedelta(days=1)
 
     # Filter the dataframe for the date range from previous Thursday to previous Wednesday
     df_filtered = df[(df['Date'] >= previous_previous_thursday.strftime('%m/%d/%Y')) & 
@@ -124,7 +124,7 @@ def calculate_weekly_average(df):
     # Create a row for the weekly averages and append it to the dataframe
     zone_averages_row = pd.DataFrame(zone_averages_weekly, index=[0])
     zone_averages_row['Date'] = previous_thursday.strftime('%m/%d/%Y')
-    zone_averages_row['Variable'] = 'Weekly Average'
+    zone_averages_row['Variable'] = '8-day Average'
 
     # Append the weekly averages to the existing dataframe
     df = pd.concat([df, zone_averages_row], ignore_index=True)
