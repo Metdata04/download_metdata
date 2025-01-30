@@ -105,7 +105,7 @@ def calculate_zone_average(df):
     filtered_df = df[(df['Date'] >= last_thursday.strftime('%Y-%m-%d')) & (df['Date'] <= last_wednesday.strftime('%Y-%m-%d'))]
     
     # If we don't have data for the full week, skip calculating averages
-    if len(filtered_df) < 7:
+    if len(filtered_df) < 6:
         print(f"Not enough data for the week from {last_thursday.strftime('%Y-%m-%d')} to {last_wednesday.strftime('%Y-%m-%d')}.")
         return df  # Return the unmodified DataFrame
     
