@@ -85,22 +85,30 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
 
     return None
 
-def calculate_8_day_average(df): 
-    # Only calculate 8-day average if the current length is a multiple of 8
-    if len(df) % 7 == 0 and len(df) >= 7:
-        # Calculate 8-day averages for each zone
-        zone_averages_8_days = {}
-        for zone, stations in zones.items():
-            station_columns = [station for station in stations if station in df.columns]
-            zone_averages_8_days[f'8-Day Average {zone}'] = round(df[station_columns].tail(7).mean().mean(), 2)
+def calculate_weekly_averages(df):
+    # Convert 'Date' column to datetime for easy manipulation
+    df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
 
-        # Append the 8-day averages row to the DataFrame
-        zone_averages_row = pd.DataFrame(zone_averages_8_days, index=[0])
-        zone_averages_row['Date'] = df['Date'].max()  # Use the last date for the 8-day average
-        zone_averages_row['Variable'] = '8-Day Average Tmin'
+    # Add a column for the week of the year (Friday to Thursday)
+    df['Week'] = df['Date'].dt.week
 
-        # Append the zone averages to the existing dataframe
-        df = pd.concat([df, zone_averages_row], ignore_index=True)
+    # Filter the data from Friday to Thursday
+    df['Day of Week'] = df['Date'].dt.weekday  # Monday=0, Sunday=6
+    df_friday_to_thursday = df[df['Day of Week'] >= 4]  # Filters data from Friday (4) to Thursday (3)
+
+    # Calculate the weekly zone averages
+    weekly_zone_averages = {}
+    for zone, stations in zones.items():
+        station_columns = [station for station in stations if station in df_friday_to_thursday.columns]
+        weekly_zone_averages[f'Weekly Average {zone}'] = df_friday_to_thursday[station_columns].mean(axis=1).mean()
+
+    # Append weekly averages to the DataFrame
+    weekly_averages_row = pd.DataFrame(weekly_zone_averages, index=[0])
+    weekly_averages_row['Date'] = df['Date'].max()  # Use the last date for the weekly average
+    weekly_averages_row['Variable'] = 'Weekly Average Tmin'
+
+    # Append the weekly averages to the existing dataframe
+    df = pd.concat([df, weekly_averages_row], ignore_index=True)
 
     return df
 
@@ -109,7 +117,7 @@ def main(pdf_path):
     if not os.path.exists(pdf_path):
         df_daily_tmin = extract_tmin_from_pdf(pdf_missing=True)
     else:
-    # Extract Tmin data from the PDF
+        # Extract Tmin data from the PDF
         df_daily_tmin = extract_tmin_from_pdf(pdf_path)
 
     if df_daily_tmin is not None:
@@ -126,13 +134,13 @@ def main(pdf_path):
         else:
             df_combined = df_daily_tmin
 
-        # Calculate 8-day average if enough data exists
-        df_combined = calculate_8_day_average(df_combined)
+        # Calculate weekly averages if enough data exists
+        df_combined = calculate_weekly_averages(df_combined)
 
         # Save the updated data back to the same CSV
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
 
-        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
+        print(f"Data (including weekly averages) saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
