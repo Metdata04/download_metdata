@@ -93,10 +93,10 @@ def calculate_zone_average(df):
     today = datetime.now()
 
     # Find the previous Thursday
-    days_since_thursday = today-timedelta(days=6) # previous Thursday
-    if days_since_thursday < 0:
-        days_since_thursday += 7  # Adjust if today is before Thursday in the week
-    last_thursday = today - timedelta(days=days_since_thursday)
+    last_thursday = today-timedelta(days=6) # previous Thursday
+    # if days_since_thursday < 0:
+    #     days_since_thursday += 7  # Adjust if today is before Thursday in the week
+    # last_thursday = today - timedelta(days=days_since_thursday)
 
     # Find the previous Wednesday (6 days before last Thursday)
     last_wednesday = today - timedelta(days=1)
