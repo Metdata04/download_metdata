@@ -89,25 +89,27 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
     return None
 
 def calculate_zone_average(df):
-    # Get the most recent Friday date to start the 7-day period
+    # Get the current date
     today = datetime.now()
-    days_since_friday = today.weekday() - 4  # 4 is Friday
-    if days_since_friday < 0:
-        days_since_friday += 7  # Adjust if today is before Friday in the week
-    last_friday = today - timedelta(days=days_since_friday)
-    
-    # Calculate the date for the Thursday of that week
-    last_thursday = last_friday + timedelta(days=6)
 
-    # Filter the DataFrame to only include data from the previous Friday to Thursday
-    filtered_df = df[(df['Date'] >= last_friday.strftime('%Y-%m-%d')) & (df['Date'] <= last_thursday.strftime('%Y-%m-%d'))]
+    # Find the most recent Thursday
+    days_since_thursday = today.weekday() - 3  # 3 is Thursday
+    if days_since_thursday < 0:
+        days_since_thursday += 7  # Adjust if today is before Thursday in the week
+    last_thursday = today - timedelta(days=days_since_thursday)
+    
+    # Calculate the date for the Wednesday of the same week (6 days after Thursday)
+    last_wednesday = last_thursday + timedelta(days=6)
+
+    # Filter the DataFrame to only include data from the previous Thursday to Wednesday
+    filtered_df = df[(df['Date'] >= last_thursday.strftime('%Y-%m-%d')) & (df['Date'] <= last_wednesday.strftime('%Y-%m-%d'))]
     
     # If we don't have data for the full week, skip calculating averages
     if len(filtered_df) < 7:
-        print(f"Not enough data for the week from {last_friday.strftime('%Y-%m-%d')} to {last_thursday.strftime('%Y-%m-%d')}.")
+        print(f"Not enough data for the week from {last_thursday.strftime('%Y-%m-%d')} to {last_wednesday.strftime('%Y-%m-%d')}.")
         return df  # Return the unmodified DataFrame
     
-    # Calculate zone averages for the Friday to Thursday period
+    # Calculate zone averages for the Thursday to Wednesday period
     zone_averages = {}
     for zone, stations in zones.items():
         station_columns = [station for station in stations if station in filtered_df.columns]
@@ -116,7 +118,7 @@ def calculate_zone_average(df):
     
     # Create a new row with the zone averages and append it to the DataFrame
     zone_averages_row = pd.DataFrame(zone_averages, index=[0])
-    zone_averages_row['Date'] = last_thursday.strftime('%Y-%m-%d')  # Use Thursday's date for the average
+    zone_averages_row['Date'] = last_wednesday.strftime('%Y-%m-%d')  # Use Wednesday's date for the average
     zone_averages_row['Variable'] = 'Weekly Zone Average'
 
     df = pd.concat([df, zone_averages_row], ignore_index=True)
@@ -144,7 +146,7 @@ def main(pdf_path):
         else:
             df_combined = df_daily_rainfall
 
-        # Calculate weekly averages (Friday to Thursday)
+        # Calculate weekly averages (Thursday to Wednesday)
         df_combined = calculate_zone_average(df_combined)
 
         # Save the updated data back to the same CSV
