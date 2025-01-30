@@ -69,7 +69,7 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
             max_rainfall = rainfall_values.max()  
             min_rainfall = rainfall_values.min()  
 
-            # Calculate zone-wise averages for the current day (we will later calculate for 7 days)
+            # Calculate zone-wise averages for the current day (we will later calculate for 8 days)
             zone_averages = {zone: round(rainfall_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
@@ -87,50 +87,51 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
             return final_df
 
     return None
-
-def calculate_zone_average(df):
+def calculate_weekly_average(df):
+    # Get the current date
     today = datetime.now()
 
-    # Ensure calculations run only on Thursdays
-    if today.weekday() == 3:  # 3 represents Thursday
-        previous_thursday = (today - timedelta(days=7)).date()
-        previous_wednesday = (today - timedelta(days=1)).date()  # Yesterday
+    # Check if today is Thursday (weekday() == 3)
+    if today.weekday() != 3:
+        print("Today is not Thursday. Weekly average will not be calculated.")
+        return df  # Return the original dataframe without modification
 
-        # Convert Date column to datetime.date for proper filtering
-        df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.date
+    # Find the previous Thursday
+    days_since_thursday = (today.weekday() - 3) % 7
+    previous_thursday = today - timedelta(days=days_since_thursday)
 
-        # Ensure both sides of comparison use datetime.date format
-        filtered_df = df[(df['Date'] >= previous_thursday) & (df['Date'] <= previous_wednesday)]
+    # Subtract 7 days to get the previous Thursday from the most recent Thursday
+    previous_previous_thursday = previous_thursday - timedelta(days=7)
 
-        # Debugging: Print filtered dataframe to check if it contains data
-        print(f"Calculating weekly average from {previous_thursday} to {previous_wednesday}")
-        print(filtered_df[['Date'] + predefined_locations])  # Check date and station values
+    # Find the previous Wednesday (one day before Thursday)
+    previous_wednesday = today - timedelta(days=1)
 
-        if filtered_df.empty:
-            print("No data available for the given period.")
-            return df
+    # Filter the dataframe for the date range from previous Thursday to previous Wednesday
+    df_filtered = df[(df['Date'] >= previous_previous_thursday.strftime('%m/%d/%Y')) & 
+                     (df['Date'] <= previous_wednesday.strftime('%m/%d/%Y'))]
 
-        # Compute zone-wise averages
-        zone_averages = {}
-        for zone, stations in zones.items():
-            station_columns = [station for station in stations if station in filtered_df.columns]
-            
-            if station_columns:
-                avg_value = filtered_df[station_columns].mean().mean()
-                zone_averages[f'Zone Average {zone}'] = round(avg_value, 2)
+    # If there is no data for the specified period, return the original dataframe
+    if df_filtered.empty:
+        print(f"No data found for the period from {previous_previous_thursday.strftime('%m/%d/%Y')} to {previous_wednesday.strftime('%m/%d/%Y')}.")
+        return df
 
-        # Append results as a new row if we have valid data
-        if zone_averages:
-            zone_averages_row = pd.DataFrame(zone_averages, index=[0])
-            zone_averages_row['Date'] = previous_wednesday  # Use Wednesday’s date for record
-            zone_averages_row['Variable'] = 'Weekly Zone Average'
-            df = pd.concat([df, zone_averages_row], ignore_index=True)
-        else:
-            print("No valid data for zone averages.")
+    # Calculate weekly averages for each zone
+    zone_averages_weekly = {}
+    for zone, stations in zones.items():
+        station_columns = [station for station in stations if station in df_filtered.columns]
+        zone_averages_weekly[f'Weekly Average {zone}'] = round(df_filtered[station_columns].mean().mean(), 2)
 
+    # Create a row for the weekly averages and append it to the dataframe
+    zone_averages_row = pd.DataFrame(zone_averages_weekly, index=[0])
+    zone_averages_row['Date'] = previous_thursday.strftime('%m/%d/%Y')
+    zone_averages_row['Variable'] = 'Weekly Average'
+
+    # Append the weekly averages to the existing dataframe
+    df = pd.concat([df, zone_averages_row], ignore_index=True)
+
+    print(f"Weekly averages for {previous_previous_thursday.strftime('%m/%d/%Y')} to {previous_thursday.strftime('%m/%d/%Y')} calculated.")
+    
     return df
-
-
 
 def main(pdf_path):
     # Check if the PDF exists
@@ -153,12 +154,12 @@ def main(pdf_path):
         else:
             df_combined = df_daily_rainfall
 
-        # Calculate weekly averages (Thursday to Wednesday)
-        df_combined = calculate_zone_average(df_combined)
-
+ # Calculate 8-day average if enough data exists
+        df_combined = calculate_weekly_average(df_combined)
         # Save the updated data back to the same CSV
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
-        print(f"Data (including weekly averages) saved to '{csv_file_path}'.")
+        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
+        print(f"Data saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
@@ -167,4 +168,3 @@ if __name__ == "__main__":
     date_string = datetime.now().strftime('%Y-%m-%d')
     pdf_filename = f'metdata/daily_climate_update_{date_string}.pdf'
     main(pdf_filename)
-
