@@ -90,37 +90,46 @@ def extract_rainfall_data_from_pdf(pdf_path=None, pdf_missing=False):
 
 def calculate_zone_average(df):
     today = datetime.now()
-    
+
     # Ensure calculations run only on Thursdays
     if today.weekday() == 3:  # 3 represents Thursday
-        previous_thursday = today - timedelta(days=7)
-        previous_wednesday = today - timedelta(days=1)  # Yesterday
+        previous_thursday = (today - timedelta(days=7)).date()
+        previous_wednesday = (today - timedelta(days=1)).date()  # Yesterday
 
-        # Convert DataFrame Date column to datetime
-        # df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        
-        # Filter DataFrame for the required range
+        # Convert Date column to datetime.date for proper filtering
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.date
+
+        # Ensure both sides of comparison use datetime.date format
         filtered_df = df[(df['Date'] >= previous_thursday) & (df['Date'] <= previous_wednesday)]
 
-        # Ensure we have enough data
-        # if len(filtered_df) < 6:
-        #     print(f"Not enough data for the week {previous_thursday.strftime('%Y-%m-%d')} to {previous_wednesday.strftime('%Y-%m-%d')}.")
-        #     return df
+        # Debugging: Print filtered dataframe to check if it contains data
+        print(f"Calculating weekly average from {previous_thursday} to {previous_wednesday}")
+        print(filtered_df[['Date'] + predefined_locations])  # Check date and station values
+
+        if filtered_df.empty:
+            print("No data available for the given period.")
+            return df
 
         # Compute zone-wise averages
         zone_averages = {}
         for zone, stations in zones.items():
             station_columns = [station for station in stations if station in filtered_df.columns]
+            
             if station_columns:
-                zone_averages[f'Zone Average {zone}'] = round(filtered_df[station_columns].mean().mean(), 2)
+                avg_value = filtered_df[station_columns].mean().mean()
+                zone_averages[f'Zone Average {zone}'] = round(avg_value, 2)
 
-        # Append results as a new row
-        zone_averages_row = pd.DataFrame(zone_averages, index=[0])
-        zone_averages_row['Date'] = previous_wednesday.strftime('%Y-%m-%d')  # Use Wednesday’s date for record
-        zone_averages_row['Variable'] = 'Weekly Zone Average'
-        df = pd.concat([df, zone_averages_row], ignore_index=True)
+        # Append results as a new row if we have valid data
+        if zone_averages:
+            zone_averages_row = pd.DataFrame(zone_averages, index=[0])
+            zone_averages_row['Date'] = previous_wednesday  # Use Wednesday’s date for record
+            zone_averages_row['Variable'] = 'Weekly Zone Average'
+            df = pd.concat([df, zone_averages_row], ignore_index=True)
+        else:
+            print("No valid data for zone averages.")
 
     return df
+
 
 
 def main(pdf_path):
@@ -158,3 +167,4 @@ if __name__ == "__main__":
     date_string = datetime.now().strftime('%Y-%m-%d')
     pdf_filename = f'metdata/daily_climate_update_{date_string}.pdf'
     main(pdf_filename)
+
