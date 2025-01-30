@@ -98,15 +98,15 @@ def calculate_zone_average(df):
         days_since_thursday += 7  # Adjust if today is before Thursday in the week
     last_thursday = today - timedelta(days=days_since_thursday)
 
-    # Find this Wednesday (6 days after Thursday)
-    this_wednesday = last_thursday + timedelta(days=6)
+    # Find the previous Wednesday (6 days before last Thursday)
+    last_wednesday = last_thursday - timedelta(days=1)
 
     # Filter the DataFrame to only include data from the previous Thursday to this Wednesday
-    filtered_df = df[(df['Date'] >= last_thursday.strftime('%Y-%m-%d')) & (df['Date'] <= this_wednesday.strftime('%Y-%m-%d'))]
+    filtered_df = df[(df['Date'] >= last_thursday.strftime('%Y-%m-%d')) & (df['Date'] <= last_wednesday.strftime('%Y-%m-%d'))]
     
     # If we don't have data for the full week, skip calculating averages
     if len(filtered_df) < 7:
-        print(f"Not enough data for the week from {last_thursday.strftime('%Y-%m-%d')} to {this_wednesday.strftime('%Y-%m-%d')}.")
+        print(f"Not enough data for the week from {last_thursday.strftime('%Y-%m-%d')} to {last_wednesday.strftime('%Y-%m-%d')}.")
         return df  # Return the unmodified DataFrame
     
     # Calculate zone averages for the Thursday to Wednesday period
@@ -118,12 +118,13 @@ def calculate_zone_average(df):
     
     # Create a new row with the zone averages and append it to the DataFrame
     zone_averages_row = pd.DataFrame(zone_averages, index=[0])
-    zone_averages_row['Date'] = this_wednesday.strftime('%Y-%m-%d')  # Use Wednesday's date for the average
+    zone_averages_row['Date'] = last_wednesday.strftime('%Y-%m-%d')  # Use Wednesday's date for the average
     zone_averages_row['Variable'] = 'Weekly Zone Average'
 
     df = pd.concat([df, zone_averages_row], ignore_index=True)
 
     return df
+
 
 def main(pdf_path):
     # Check if the PDF exists
