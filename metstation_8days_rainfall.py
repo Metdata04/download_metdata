@@ -103,7 +103,7 @@ def calculate_zone_average(df):
         filtered_df = df[(df['Date'] >= previous_thursday) & (df['Date'] <= previous_wednesday)]
 
         # Ensure we have enough data
-        if len(filtered_df) < 7:
+        if len(filtered_df) < 6:
             print(f"Not enough data for the week {previous_thursday.strftime('%Y-%m-%d')} to {previous_wednesday.strftime('%Y-%m-%d')}.")
             return df
 
