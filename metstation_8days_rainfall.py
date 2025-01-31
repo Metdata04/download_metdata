@@ -119,7 +119,7 @@ def calculate_weekly_average(df):
     zone_averages_weekly = {}
     for zone, stations in zones.items():
         station_columns = [station for station in stations if station in df_filtered.columns]
-        zone_averages_weekly[f'Weekly Average {zone}'] = round(df_filtered[station_columns].mean().mean(), 2)
+        zone_averages_weekly[f'8-Day Average {zone}'] = round(df_filtered[station_columns].mean().mean(), 2)
 
     # Create a row for the weekly averages and append it to the dataframe
     zone_averages_row = pd.DataFrame(zone_averages_weekly, index=[0])
