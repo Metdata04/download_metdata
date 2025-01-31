@@ -5,11 +5,11 @@ from datetime import datetime, timedelta
 
 # Predefined locations for Tmin data extraction
 predefined_locations = [
-    "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo", 
-    "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota", 
-    "Katunayake", "Kurunagala", "Maha Illuppallama", "Mannar", 
-    "Polonnaruwa", "Nuwara Eliya", "Pothuvil", "Puttalam", 
-    "Rathmalana", "Ratnapura", "Trincomalee", "Vavuniya", "Mattala", 
+    "Anuradhapura", "Badulla", "Bandarawela", "Batticaloa", "Colombo",
+    "Galle", "Hambantota", "Jaffna", "Moneragala", "Katugasthota",
+    "Katunayake", "Kurunagala", "Maha Illuppallama", "Mannar",
+    "Polonnaruwa", "Nuwara Eliya", "Pothuvil", "Puttalam",
+    "Rathmalana", "Ratnapura", "Trincomalee", "Vavuniya", "Mattala",
     "Mullaitivu"
 ]
 
@@ -23,11 +23,14 @@ zones = {
     "Southern Plains": ["Hambantota", "Mattala"]
 }
 
-def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
+def extract_tmin_data_from_pdf(pdf_path=None, pdf_missing=False):
+    # Get yesterday's date
+    yesterday_date = (datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')
+    
     # If the PDF is missing, create a DataFrame with '0.0' values for all locations
     if pdf_missing:
         data = {
-            'Date': [(datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')],  # Yesterday's date
+            'Date': [yesterday_date],
             'Variable': ['Tmin'],
         }
         for location in predefined_locations:
@@ -48,30 +51,30 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
 
             # Prepare a DataFrame to hold results
             results = {
-                'Date': [(datetime.now() - timedelta(days=1)).strftime('%m/%d/%Y')],  # Yesterday's date
+                'Date': yesterday_date,
                 'Tmin': []
             }
 
             # Loop through each predefined location and extract Tmin data
             for index in range(len(predefined_locations)):
-                tmin = df_extracted.iloc[index, 2] if index < len(df_extracted) else 0.0
+                tmin = df_extracted.iloc[index, 3] if index < len(df_extracted) else 0.0
                 results['Tmin'].append(float(tmin) if pd.notna(tmin) and tmin not in ['NA', 'tr', 'TR'] else 0.0)
 
             # Convert Tmin data to numeric, errors='coerce' will replace non-convertible values with NaN
             tmin_values = pd.to_numeric(results['Tmin'], errors='coerce')
 
             # Calculate total, average, max, and min Tmin
-            total_tmin = round(tmin_values.sum(),2) 
-            average_tmin = tmin_values.mean()  
+            total_tmin = tmin_values.sum()  
+            average_tmin = round(tmin_values.mean(), 2)  
             max_tmin = tmin_values.max()  
             min_tmin = tmin_values.min()  
 
-            # Calculate zone-wise averages for the current day
-            zone_averages = {zone: round(tmin_values[[predefined_locations.index(station) for station in stations]].mean(),2) for zone, stations in zones.items()}
+            # Calculate zone-wise averages for the current day (we will later calculate for 8 days)
+            zone_averages = {zone: round(tmin_values[[predefined_locations.index(station) for station in stations]].mean(), 2) for zone, stations in zones.items()}
 
             # Create a DataFrame for daily results
             final_df = pd.DataFrame({
-                'Date': [results['Date'][0]],
+                'Date': [results['Date']],
                 'Variable': ['Tmin'],
                 **{predefined_locations[i]: [results['Tmin'][i]] for i in range(len(predefined_locations))},
                 'Total Tmin': [total_tmin],
@@ -85,67 +88,53 @@ def extract_tmin_from_pdf(pdf_path=None, pdf_missing=False):
 
     return None
 
-def calculate_weekly_averages(df):
-    # Convert 'Date' column to datetime for easy manipulation
-    df['Date'] = pd.to_datetime(df['Date'], format='%m/%d/%Y')
+def calculate_weekly_average(df):
+    today = datetime.now()
+    if today.weekday() != 3:
+        print("Today is not Thursday. Weekly average will not be calculated.")
+        return df
 
-    # Add a column for the week of the year (Friday to Thursday)
-    df['Week'] = df['Date'].dt.week
+    days_since_thursday = (today.weekday() - 3) % 7
+    previous_thursday = today - timedelta(days=days_since_thursday)
+    previous_previous_thursday = previous_thursday - timedelta(days=7)
+    previous_wednesday = previous_thursday - timedelta(days=1)
 
-    # Filter the data from Friday to Thursday
-    df['Day of Week'] = df['Date'].dt.weekday  # Monday=0, Sunday=6
-    df_friday_to_thursday = df[df['Day of Week'] >= 4]  # Filters data from Friday (4) to Thursday (3)
+    df_filtered = df[(df['Date'] >= previous_previous_thursday.strftime('%m/%d/%Y')) & 
+                     (df['Date'] <= previous_wednesday.strftime('%m/%d/%Y'))]
 
-    # Calculate the weekly zone averages
-    weekly_zone_averages = {}
+    if df_filtered.empty:
+        print(f"No data found for the period from {previous_previous_thursday.strftime('%m/%d/%Y')} to {previous_wednesday.strftime('%m/%d/%Y')}.")
+        return df
+
+    zone_averages_weekly = {}
     for zone, stations in zones.items():
-        station_columns = [station for station in stations if station in df_friday_to_thursday.columns]
-        weekly_zone_averages[f'Weekly Average {zone}'] = df_friday_to_thursday[station_columns].mean(axis=1).mean()
+        station_columns = [station for station in stations if station in df_filtered.columns]
+        zone_averages_weekly[f'8-Day Average {zone}'] = round(df_filtered[station_columns].mean().mean(), 2)
 
-    # Append weekly averages to the DataFrame
-    weekly_averages_row = pd.DataFrame(weekly_zone_averages, index=[0])
-    weekly_averages_row['Date'] = df['Date'].max()  # Use the last date for the weekly average
-    weekly_averages_row['Variable'] = 'Weekly Average Tmin'
+    zone_averages_row = pd.DataFrame(zone_averages_weekly, index=[0])
+    zone_averages_row['Date'] = previous_thursday.strftime('%m/%d/%Y')
+    zone_averages_row['Variable'] = '8-day Average'
 
-    # Append the weekly averages to the existing dataframe
-    df = pd.concat([df, weekly_averages_row], ignore_index=True)
-
+    df = pd.concat([df, zone_averages_row], ignore_index=True)
+    print(f"Weekly averages for {previous_previous_thursday.strftime('%m/%d/%Y')} to {previous_thursday.strftime('%m/%d/%Y')} calculated.")
+    
     return df
 
 def main(pdf_path):
-    # Check if the PDF file exists
-    if not os.path.exists(pdf_path):
-        df_daily_tmin = extract_tmin_from_pdf(pdf_missing=True)
-    else:
-        # Extract Tmin data from the PDF
-        df_daily_tmin = extract_tmin_from_pdf(pdf_path)
+    pdf_missing = not os.path.exists(pdf_path)
+    df_daily_tmin = extract_tmin_data_from_pdf(pdf_path, pdf_missing)
 
     if df_daily_tmin is not None:
-        # Save the cleaned DataFrame to a CSV file in 'extracted_data' folder
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'metstation_tmin_data.csv')
-
-        # Append to CSV if it already exists, otherwise create a new one
-        if os.path.exists(csv_file_path):
-            # Load the existing data
-            df_existing = pd.read_csv(csv_file_path)
-            # Append the new daily data
-            df_combined = pd.concat([df_existing, df_daily_tmin], ignore_index=True)
-        else:
-            df_combined = df_daily_tmin
-
-        # Calculate weekly averages if enough data exists
-        df_combined = calculate_weekly_averages(df_combined)
-
-        # Save the updated data back to the same CSV
+        csv_file_path = os.path.join('extracted_data', 'metstation_tmin.csv')
+        df_combined = pd.concat([pd.read_csv(csv_file_path) if os.path.exists(csv_file_path) else pd.DataFrame(), df_daily_tmin], ignore_index=True)
+        df_combined = calculate_weekly_average(df_combined)
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
-
-        print(f"Data (including weekly averages) saved to '{csv_file_path}'.")
+        print(f"Data (including 8-day averages) saved to '{csv_file_path}'.")
     else:
         print("No table found in the PDF or no matching locations found.")
 
 if __name__ == "__main__":
-    # Get the current date in YYYY-MM-DD format for the filename
     date_string = datetime.now().strftime('%Y-%m-%d')
     pdf_filename = f'metdata/daily_climate_update_{date_string}.pdf'
     main(pdf_filename)
