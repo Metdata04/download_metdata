@@ -126,7 +126,7 @@ def main(pdf_path):
 
     if df_daily_tmax is not None:
         os.makedirs('extracted_data', exist_ok=True)
-        csv_file_path = os.path.join('extracted_data', 'metstation_tmax.csv')
+        csv_file_path = os.path.join('extracted_data', 'metstation_tmax_data.csv')
         df_combined = pd.concat([pd.read_csv(csv_file_path) if os.path.exists(csv_file_path) else pd.DataFrame(), df_daily_tmax], ignore_index=True)
         df_combined = calculate_weekly_average(df_combined)
         df_combined.to_csv(csv_file_path, mode='w', header=True, index=False)
